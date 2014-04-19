@@ -1,9 +1,12 @@
 svg {
   font: 10px sans-serif;
 }
-.area {
-  fill: steelblue;
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
 }
+
 .axis path,
 .axis line {
   fill: none;

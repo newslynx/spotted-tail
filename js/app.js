@@ -28,17 +28,13 @@
 	    .x(x2)
 	    .on("brush", brushed);
 
-	var area = d3.svg.area()
-	    .interpolate("monotone")
-	    .x(function(d) { return x(d.date); })
-	    .y0(height)
-	    .y1(function(d) { return y(d.price); });
+	var line = d3.svg.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.price); });
 
-	var area2 = d3.svg.area()
-	    .interpolate("monotone")
-	    .x(function(d) { return x2(d.date); })
-	    .y0(height2)
-	    .y1(function(d) { return y2(d.price); });
+	var line2 = d3.svg.line()
+    .x(function(d) { return x2(d.date); })
+    .y(function(d) { return y2(d.price); });
 
 	var svg = d3.select("#st-chart").append("svg")
 	    .attr("width", width + margin.left + margin.right)
@@ -80,9 +76,9 @@
 
 	  focus.append("path")
 	      .datum(data)
-	      .attr("class", "area")
+	      .attr("class", "line")
 	      .style("clip-path", "url(#clip)")
-	      .attr("d", area)
+	      .attr("d", line)
 				.on("mouseover", function() { point.style("display", null); })
 	      .on("mouseout", function() { point.style("display", "none"); })
 	      .on("mousemove", mousemove);
@@ -98,8 +94,8 @@
 
 	  context.append("path")
 	      .datum(data)
-	      .attr("class", "area")
-	      .attr("d", area2);
+	      .attr("class", "line")
+	      .attr("d", line2);
 
 	  context.append("g")
 	      .attr("class", "x axis")
@@ -127,7 +123,7 @@
 
 	function brushed() {
 	  x.domain(brush.empty() ? x2.domain() : brush.extent());
-	  focus.select(".area").attr("d", area);
+	  focus.select(".line").attr("d", line);
 	  focus.select(".x.axis").call(xAxis);
 	}
 
