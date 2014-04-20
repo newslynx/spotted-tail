@@ -5,7 +5,8 @@ The graph for article dashboard.
 
 ## Requirements
 
-* handle variable number line charts
+* brushable - done
+* handle variable number line charts - done
 * accept "impact events" and basic annotations
 	* an "impact event" is a moment such as award
 	* basic annotation is some relevante event such "this is when our main account tweeted the story" but that is not itself a measure of impact
