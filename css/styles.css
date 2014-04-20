@@ -4,13 +4,13 @@ body{
 svg {
   font: 10px sans-serif;
 }
-.line {
+.spl-line {
   fill: none;
   stroke: steelblue;
   stroke-width: 1.5px;
 }
 
-.axis{
+.spl-axis, text{
   cursor: default;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -19,27 +19,27 @@ svg {
   -ms-user-select: none;
   user-select: none;
 }
-.axis path,
-.axis line {
+.spl-axis path,
+.spl-axis line {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
 }
-.brush .extent {
+.spl-brush .extent {
   stroke: #fff;
   fill-opacity: .125;
   shape-rendering: crispEdges;
 }
-.point{
+.spl-point{
 	pointer-events: none;
 }
 
-#st-chart{
+#spl-chart{
 	width: 500px;
 	height: 200px;
 }
 
-.point circle {
+.spl-point circle {
   fill: none;
   stroke: #444;
 }
