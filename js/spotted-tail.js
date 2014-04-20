@@ -17,7 +17,6 @@ function spottedTail() {
       xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickSize(6, 0),
       yAxis = d3.svg.axis().scale(yScale).orient("left"),
       xAxisBrush = d3.svg.axis().scale(xScaleBrush).orient("bottom").tickSize(6, 0),
-      // area = d3.svg.area().x(X).y1(Y),
       line = d3.svg.line().x(X).y(Y)
       lineBrush = d3.svg.line().x(XBrush).y(YBrush)
       brush = d3.svg.brush().x(xScaleBrush);
@@ -99,6 +98,7 @@ function spottedTail() {
       var brushCtnr     = svg.append("g")
                             .attr('class', 'brush')
                             .attr("transform", "translate(" + marginBrush.left + "," + marginBrush.top + ")");
+     
       // line, brusher, axes
       // brushCtnr.append('path').attr('class','metric-line');
       brushCtnr.append('g').attr('class', 'x brusher').call(brush.on("brush", brushed)).selectAll("rect").attr("y", -6).attr("height", chart_height_brush + 7);
@@ -119,7 +119,6 @@ function spottedTail() {
           .style("clip-path", "url(#clip)")
           .attr("d", function(d) { return line(d.values); })
           .style("stroke", function(d) { return color(d.name); });
-
 
       // And its xAxis
       lineChartCtnr.select('.x.axis')
@@ -162,13 +161,11 @@ function spottedTail() {
 
   // The x-accessor for the path generator; xScale ∘ xValue.
   function X(d) {
-    // console.log(xScale(d.date), d.date)
     return xScale(d.date);
   }
 
   // The x-accessor for the path generator; yScale ∘ yValue.
   function Y(d) {
-    // console.log(yScale(yValue(d)))
     return yScale(yValue(d));
   }
 
