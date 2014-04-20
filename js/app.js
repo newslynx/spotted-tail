@@ -10,7 +10,7 @@
 						twitter: {metric: 'mentions', color: "#55ACEE"}
 					};
 
-		d3.select('#spl-chart')
+		d3.select('#ST-chart')
 			.datum(data)
 		.call(spottedTail()
 			.x(function(d) { return formatDate.parse(d.date); })
