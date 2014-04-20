@@ -9,6 +9,7 @@ function timeSeriesChart() {
       chart_height_brush,
       xValue,
       yValue,
+      color = d3.scale.category10(),
       xScale = d3.time.scale(),
       xScaleBrush = d3.time.scale(),
       yScale = d3.scale.linear(),
@@ -36,21 +37,23 @@ function timeSeriesChart() {
       chart_height = dimensions.height - margin.top - margin.bottom;
       chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
 
-      // Convert data to standard representation greedily;
-      // this is needed for nondeterministic accessors.
-      data = data.map(function(d, i) {
-        var dd = [xValue(d)];
-
-        if ( isArray(yValue(d)) ) {
-          yValue(d).forEach(function(yy){ dd.push(yy) }); 
-        } else {
-          dd.push(yValue(d))
-        }
-        return dd;
+      color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
+      data.forEach(function(d, i) {
+        d.date = xValue(d);
       });
 
-      var x_domain = d3.extent(data, function(d) { return d[0]; }),
-          y_domain = [0, d3.max(data, function(d) { return Math.max.apply(null, d.slice(1, d.length))  })];
+      var metrics = color.domain().map(function(name) {
+          return { name: name,
+          values: data.map(function(d) {
+            return {date: d.date, count: +d[name]};
+          })
+        }
+      });
+
+      var x_domain = d3.extent(data, function(d) { return d.date; }),
+          y_domain = [0, 
+            d3.max(metrics, function(c) { return d3.max(c.values, function(v) { return v.count; }); })
+          ];
 
       // Update the x-scale.
       xScale
@@ -72,8 +75,8 @@ function timeSeriesChart() {
           .domain(y_domain)
           .range([chart_height_brush, 0]);
 
-      // Select the svg element
-      var svg = d3.select(this).selectAll("svg").data([data]).enter().append("svg");
+      // Append the svg element
+      var svg = d3.select(this).append("svg");
 
       // Clipping path
       svg.append("defs").append("clipPath")
@@ -88,7 +91,7 @@ function timeSeriesChart() {
                             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // line with clipping path, axes
-      lineChartCtnr.append('path').attr('class','line').style("clip-path", "url(#clip)");
+      // lineChartCtnr.append('path').attr('class','metric-line').style("clip-path", "url(#clip)");
       lineChartCtnr.append('g').attr('class', 'y axis');
       lineChartCtnr.append('g').attr('class', 'x axis');
 
@@ -97,7 +100,7 @@ function timeSeriesChart() {
                             .attr('class', 'brush')
                             .attr("transform", "translate(" + marginBrush.left + "," + marginBrush.top + ")");
       // line, brusher, axes
-      brushCtnr.append('path').attr('class','line');
+      // brushCtnr.append('path').attr('class','metric-line');
       brushCtnr.append('g').attr('class', 'x brusher').call(brush.on("brush", brushed)).selectAll("rect").attr("y", -6).attr("height", chart_height_brush + 7);
       brushCtnr.append('g').attr('class', 'x axis');
 
@@ -106,11 +109,17 @@ function timeSeriesChart() {
           .attr("height", dimensions.height);
 
       // Update the line path.
-      lineChartCtnr.select(".line")
-          .attr("d", line);/*
-          .on("mouseover", function() { point.style("display", null); })
-          .on("mouseout", function() { point.style("display", "none"); })
-          .on("mousemove", mousemove);*/
+      lineChartCtnr.selectAll(".metric-line")
+          .data(metrics)
+        .enter().append("g")
+          .attr("class", "metric-line");
+
+      lineChartCtnr.selectAll('.metric-line').append("path")
+          .attr("class", "line")
+          .style("clip-path", "url(#clip)")
+          .attr("d", function(d) { return line(d.values); })
+          .style("stroke", function(d) { return color(d.name); });
+
 
       // And its xAxis
       lineChartCtnr.select('.x.axis')
@@ -122,17 +131,25 @@ function timeSeriesChart() {
           .call(yAxis);
 
       // Update the brush path
-      brushCtnr.select(".line")
-          .attr("d", lineBrush);
+      brushCtnr.selectAll(".metric-line")
+          .data(metrics)
+        .enter().append("g")
+          .attr("class", "metric-line");
+          
+      brushCtnr.selectAll(".metric-line")
+        .append("path")
+          .attr("class", "line")
+          .attr("d", function(d) { return lineBrush(d.values); })
+          .style("stroke", function(d) { return color(d.name); });
 
       // And its xAxis
       brushCtnr.select('.x.axis')
           .attr("transform", "translate(0," + yScaleBrush.range()[0] + ")")
           .call(xAxisBrush);
 
-      function brushed() {
+      function brushed(d) {
         xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
-        lineChartCtnr.select(".line").attr("d", line);
+        lineChartCtnr.selectAll(".metric-line .line").attr("d", function(d){return line(d.values) });
         lineChartCtnr.select(".x.axis").call(xAxis);
       }
 
@@ -145,22 +162,24 @@ function timeSeriesChart() {
 
   // The x-accessor for the path generator; xScale ∘ xValue.
   function X(d) {
-    return xScale(d[0]);
+    // console.log(xScale(d.date), d.date)
+    return xScale(d.date);
   }
 
   // The x-accessor for the path generator; yScale ∘ yValue.
   function Y(d) {
-    return yScale(d[1]);
+    // console.log(yScale(yValue(d)))
+    return yScale(yValue(d));
   }
 
   // The x-accessor for the brush path generator; xScale ∘ xValue.
   function XBrush(d) {
-    return xScaleBrush(d[0]);
+    return xScaleBrush(d.date);
   }
 
   // The x-accessor for the brush path generator; yScale ∘ yValue.
   function YBrush(d) {
-    return yScaleBrush(d[1]);
+    return yScaleBrush(yValue(d));
   }
 
   chart.margin = function(_) {

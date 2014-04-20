@@ -9,7 +9,7 @@
 			.datum(sp500)
 	  .call(timeSeriesChart()
 	    .x(function(d) { return formatDate.parse(d.date); })
-	    .y(function(d) { return [+d.price, +d.sale]; }))
+	    .y(function(d) { return +d.count; }))
 	  	// .on('mouseover', function(d){console.log(d)});
 		
 	}
