@@ -79,7 +79,7 @@ function spottedTail() {
 					.range([chart_height_brush, 0]);
 
 			// Append the svg element
-			var svg = d3.select(this).append('svg');
+			var svg = d3.select(this).append('svg').attr('class', 'ST-canvas');
 
 			// Clipping path
 			svg.append('defs').append('clipPath')

@@ -5,17 +5,16 @@ body{
 	width: 500px;
 	height: 200px;
 }
-svg {
+.ST-canvas {
   font: 10px sans-serif;
 }
 
-svg .ST-line {
+.ST-canvas .ST-line {
   fill: none;
   stroke: steelblue;
   stroke-width: 1.5px;
 }
-
-svg .ST-axis, text{
+.ST-canvas .ST-axis, text{
   cursor: default;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -24,23 +23,21 @@ svg .ST-axis, text{
   -ms-user-select: none;
   user-select: none;
 }
-svg .ST-axis path,
-svg .ST-axis line {
+.ST-canvas .ST-axis path,
+.ST-canvas .ST-axis line {
   fill: none;
   stroke: #000;
   shape-rendering: crispEdges;
 }
-svg .ST-brush .extent {
+.ST-canvas .ST-brush .extent {
   stroke: #fff;
   fill-opacity: .125;
   shape-rendering: crispEdges;
 }
-svg .ST-point{
+.ST-canvas .ST-point{
   pointer-events: none;
 }
-
-
-svg .ST-point circle {
+.ST-canvas .ST-point circle {
   fill: none;
   stroke: #444;
 }
