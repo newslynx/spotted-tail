@@ -1,5 +1,5 @@
 function spottedTail() {
-  // TODO, hover point
+  // TODO, hover point, standardize style, prefix classes
   var dimensions = {width: 700, height: 300},
       margin,
       marginBrush,
@@ -9,6 +9,7 @@ function spottedTail() {
       chart_height_brush,
       xValue,
       yValue,
+      legend,
       color = d3.scale.category10(),
       xScale = d3.time.scale(),
       xScaleBrush = d3.time.scale(),
@@ -19,7 +20,9 @@ function spottedTail() {
       xAxisBrush = d3.svg.axis().scale(xScaleBrush).orient("bottom").tickSize(6, 0),
       line = d3.svg.line().x(X).y(Y)
       lineBrush = d3.svg.line().x(XBrush).y(YBrush)
-      brush = d3.svg.brush().x(xScaleBrush);
+      brush = d3.svg.brush().x(xScaleBrush),
+      bisectDate = d3.bisector(function(d) { return d.date; }).left
+      ppDate = function(dObj) { return dObj.toDateString() };
 
   function chart(selection) {
     selection.each(function(data, idx) {
@@ -36,10 +39,11 @@ function spottedTail() {
       chart_height = dimensions.height - margin.top - margin.bottom;
       chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
 
-      color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
       data.forEach(function(d, i) {
         d.date = xValue(d);
       });
+
+      color.domain(d3.keys(data[0]).filter(function(key) { return key !== "date"; }));
 
       var metrics = color.domain().map(function(name) {
           return { name: name,
@@ -88,17 +92,25 @@ function spottedTail() {
       var lineChartCtnr = svg.append("g")
                             .attr('class', 'line-g')
                             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      // For mouseevents                     
+      lineChartCtnr.append("rect")
+          .attr("width", chart_width)
+          .attr("height", chart_height)
+          .attr('fill', 'none')
+          .attr('pointer-events', 'all')
+          .on("mouseover", function() {d3.selectAll('.point').style("display", null); })
+          .on("mouseout", function() { d3.selectAll('.point').style("display", "none"); })
+          .on("mousemove", mousemove)
 
       // line with clipping path, axes
-      // lineChartCtnr.append('path').attr('class','metric-line').style("clip-path", "url(#clip)");
       lineChartCtnr.append('g').attr('class', 'y axis');
       lineChartCtnr.append('g').attr('class', 'x axis');
 
       // Brush container
       var brushCtnr     = svg.append("g")
                             .attr('class', 'brush')
-                            .attr("transform", "translate(" + marginBrush.left + "," + marginBrush.top + ")");
-     
+                            .attr("transform", "translate(" + marginBrush.left + "," + marginBrush.top + ")")
+
       // line, brusher, axes
       // brushCtnr.append('path').attr('class','metric-line');
       brushCtnr.append('g').attr('class', 'x brusher').call(brush.on("brush", brushed)).selectAll("rect").attr("y", -6).attr("height", chart_height_brush + 7);
@@ -106,19 +118,30 @@ function spottedTail() {
 
       // Update the outer dimensions to the full dimensions including the margins.
       svg .attr("width", dimensions.width)
-          .attr("height", dimensions.height);
+          .attr("height", dimensions.height)
+
 
       // Update the line path.
       lineChartCtnr.selectAll(".metric-line")
           .data(metrics)
         .enter().append("g")
-          .attr("class", "metric-line");
+          .attr("class", "metric-line")
+          .append('g')
+            .attr('class', 'point').style('display', 'none')
+          .append('circle')
+            .attr('r', 3.5)
+      
+      lineChartCtnr.selectAll(".point")
+          .append('text')
+            .attr("x", 9)
+            .attr("dy", ".35em");
 
-      lineChartCtnr.selectAll('.metric-line').append("path")
+      lineChartCtnr.selectAll('.metric-line')
+        .append("path")
           .attr("class", "line")
           .style("clip-path", "url(#clip)")
           .attr("d", function(d) { return line(d.values); })
-          .style("stroke", function(d) { return color(d.name); });
+          .style("stroke", function(d) { return legend[d.name].color || color(d.name); });
 
       // And its xAxis
       lineChartCtnr.select('.x.axis')
@@ -139,7 +162,7 @@ function spottedTail() {
         .append("path")
           .attr("class", "line")
           .attr("d", function(d) { return lineBrush(d.values); })
-          .style("stroke", function(d) { return color(d.name); });
+          .style("stroke", function(d) { return legend[d.name].color || color(d.name); });
 
       // And its xAxis
       brushCtnr.select('.x.axis')
@@ -150,6 +173,17 @@ function spottedTail() {
         xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
         lineChartCtnr.selectAll(".metric-line .line").attr("d", function(d){return line(d.values) });
         lineChartCtnr.select(".x.axis").call(xAxis);
+      }
+
+      function mousemove(d) {
+        var x0 = xScale.invert(d3.mouse(this)[0]),
+            i = bisectDate(data, x0, 1),
+            d0 = data[i - 1],
+            d1 = data[i];
+        var d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        var point = d3.selectAll('.point');
+        point.attr("transform", function(dd) {return 'translate(' + X(d) + ',' + yScale(d[dd.name]) + ')' });
+        point.select("text").text(function(dd) { return d[dd.name] + ' ' + (legend[dd.name].metric || dd.name) });
       }
 
     });
@@ -179,6 +213,7 @@ function spottedTail() {
     return yScaleBrush(yValue(d));
   }
 
+
   chart.margin = function(_) {
     if (!arguments.length) return margin;
     margin = _;
@@ -206,6 +241,12 @@ function spottedTail() {
   chart.y = function(_) {
     if (!arguments.length) return yValue;
     yValue = _;
+    return chart;
+  };
+
+  chart.legend = function(_) {
+    if (!arguments.length) return legend;
+    legend = _;
     return chart;
   };
 

@@ -38,3 +38,8 @@ svg {
 	width: 500px;
 	height: 200px;
 }
+
+.point circle {
+  fill: none;
+  stroke: #444;
+}
