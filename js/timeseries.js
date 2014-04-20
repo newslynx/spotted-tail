@@ -1,12 +1,14 @@
 function timeSeriesChart() {
-  var margin = {top: 10, right: 0, bottom: 90, left: 40},
-      marginBrush = {top: 240, right: 250, bottom: 20, left: 40},
-      width = 760 - margin.left - margin.right,
-      widthBrush = 760 - marginBrush.left - marginBrush.right,
-      height = 300 - margin.top - margin.bottom,
-      heightBrush = 300 - marginBrush.top - marginBrush.bottom,
-      xValue = function(d) { return d[0]; },
-      yValue = function(d) { return d[1]; },
+  // TODO, hover point, multiple lines
+  var dimensions = {width: 700, height: 300},
+      margin,
+      marginBrush,
+      chart_width,
+      chart_width_brush,
+      chart_height,
+      chart_height_brush,
+      xValue,
+      yValue,
       xScale = d3.time.scale(),
       xScaleBrush = d3.time.scale(),
       yScale = d3.scale.linear(),
@@ -20,46 +22,66 @@ function timeSeriesChart() {
       brush = d3.svg.brush().x(xScaleBrush);
 
   function chart(selection) {
-    selection.each(function(data) {
+    selection.each(function(data, idx) {
+
+      // Define the width based on the dimensions of the input container
+      var ctnr = document.getElementById(selection[idx][0].id);
+      chart.width(ctnr.offsetWidth);
+      chart.height(ctnr.offsetHeight);
+
+      margin = {top: 10, right: 0, bottom: (dimensions.height/3), left: 40};
+      marginBrush = {top: (dimensions.height * .8), right: (dimensions.width*.3), bottom: 20, left: 40};
+      chart_width = dimensions.width - margin.left - margin.right;
+      chart_width_brush = dimensions.width - marginBrush.left - marginBrush.right;
+      chart_height = dimensions.height - margin.top - margin.bottom;
+      chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
 
       // Convert data to standard representation greedily;
       // this is needed for nondeterministic accessors.
       data = data.map(function(d, i) {
-        return [xValue.call(data, d, i), yValue.call(data, d, i)];
+        var dd = [xValue(d)];
+
+        if ( isArray(yValue(d)) ) {
+          yValue(d).forEach(function(yy){ dd.push(yy) }); 
+        } else {
+          dd.push(yValue(d))
+        }
+        return dd;
       });
+
+      var x_domain = d3.extent(data, function(d) { return d[0]; }),
+          y_domain = [0, d3.max(data, function(d) { return Math.max.apply(null, d.slice(1, d.length))  })];
 
       // Update the x-scale.
       xScale
-          .domain(d3.extent(data, function(d) { return d[0]; }))
-          .range([0, width]);
+          .domain(x_domain)
+          .range([0, chart_width]);
 
       // Update the y-scale.
       yScale
-          .domain([0, d3.max(data, function(d) { return d[1]; })])
-          .range([height, 0]);
+          .domain(y_domain)
+          .range([chart_height, 0]);
 
       // Update the x-scale.
       xScaleBrush
-          .domain(d3.extent(data, function(d) { return d[0]; }))
-          .range([0, widthBrush]);
+          .domain(x_domain)
+          .range([0, chart_width_brush]);
 
       // Update the y-scale.
       yScaleBrush
-          .domain([0, d3.max(data, function(d) { return d[1]; })])
-          .range([heightBrush, 0]);
+          .domain(y_domain)
+          .range([chart_height_brush, 0]);
 
-      // Select the svg element, if it exists.
+      // Select the svg element
       var svg = d3.select(this).selectAll("svg").data([data]).enter().append("svg");
 
-      console.log(width, height)
       // Clipping path
       svg.append("defs").append("clipPath")
           .attr("id", "clip")
         .append("rect")
-          .attr("width", width)
-          .attr("height", height);
+          .attr("width", chart_width)
+          .attr("height", chart_height);
 
-      // Otherwise, create the skeletal chart.
       // Lines
       var lineChartCtnr = svg.append("g")
                             .attr('class', 'line-g')
@@ -76,12 +98,12 @@ function timeSeriesChart() {
                             .attr("transform", "translate(" + marginBrush.left + "," + marginBrush.top + ")");
       // line, brusher, axes
       brushCtnr.append('path').attr('class','line');
-      brushCtnr.append('g').attr('class', 'x brusher').call(brush.on("brush", brushed)).selectAll("rect").attr("y", -6).attr("height", heightBrush + 7);
+      brushCtnr.append('g').attr('class', 'x brusher').call(brush.on("brush", brushed)).selectAll("rect").attr("y", -6).attr("height", chart_height_brush + 7);
       brushCtnr.append('g').attr('class', 'x axis');
 
       // Update the outer dimensions to the full dimensions including the margins.
-      svg .attr("width", width + margin.left + margin.right)
-          .attr("height", height + margin.top + margin.bottom);
+      svg .attr("width", dimensions.width)
+          .attr("height", dimensions.height);
 
       // Update the line path.
       lineChartCtnr.select(".line")
@@ -117,6 +139,10 @@ function timeSeriesChart() {
     });
   }
 
+  function isArray(testVar){
+    return Object.prototype.toString.call( testVar ) == '[object Array]';
+  }
+
   // The x-accessor for the path generator; xScale ∘ xValue.
   function X(d) {
     return xScale(d[0]);
@@ -144,14 +170,14 @@ function timeSeriesChart() {
   };
 
   chart.width = function(_) {
-    if (!arguments.length) return width;
-    width = _;
+    if (!arguments.length) return dimensions.width;
+    dimensions.width = _;
     return chart;
   };
 
   chart.height = function(_) {
-    if (!arguments.length) return height;
-    height = _;
+    if (!arguments.length) return dimensions.height;
+    dimensions.height = _;
     return chart;
   };
 
