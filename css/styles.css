@@ -34,7 +34,7 @@ body{
   fill-opacity: .125;
   shape-rendering: crispEdges;
 }
-.ST-canvas .ST-point{
+.ST-canvas .ST-point, .ST-canvas path, .ST-canvas line{
   pointer-events: none;
 }
 .ST-canvas .ST-point circle {
