@@ -134,7 +134,6 @@ function spottedTail() {
 			
 			lineChartCtnr.selectAll('.ST-point')
 					.append('text')
-						.attr('x', 9)
 						.attr('dy', '.35em');
 
 			lineChartCtnr.selectAll('.ST-metric-line')
@@ -177,14 +176,19 @@ function spottedTail() {
 			}
 
 			function mousemove(d) {
-				var x0 = xScale.invert(d3.mouse(this)[0]),
+				var that = this;
+				var mouse_buffer = 9;
+				var m = d3.mouse(that)[0],
+						x0 = xScale.invert(m),
 						i = bisectDate(data, x0, 1),
 						d0 = data[i - 1],
 						d1 = data[i];
 				var d = x0 - d0.date > d1.date - x0 ? d1 : d0;
 				var point = d3.selectAll('.ST-point');
 				point.attr('transform', function(dd) {return 'translate(' + X(d) + ',' + yScale(d[dd.name]) + ')' });
-				point.select('text').text(function(dd) { return d[dd.name] + ' ' + (legend[dd.name].metric || dd.name) });
+				point.select('text')
+					.text(function(dd) { return d[dd.name] + ' ' + (legend[dd.name].metric || dd.name) })
+					.attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_buffer*2) ? mouse_buffer : (-mouse_buffer - this.getBBox().width) });
 			}
 
 		});

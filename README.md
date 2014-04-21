@@ -10,7 +10,7 @@ The graph for article dashboard.
 * hover points - done
 * colorable - done
 * responsive
-* hover labels respect bounds
+* hover labels respect bounds - done
 * legend
 * accept "impact events" and basic annotations
 	* an "impact event" is a moment such as award
