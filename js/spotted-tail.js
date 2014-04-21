@@ -1,8 +1,8 @@
 function spottedTail() {
 
-	var dimensions = {width: 700, height: 300},
-			margin,
-			marginBrush,
+	var dimensions = {},
+			margin = {},
+			marginBrush = {},
 			chart_width,
 			chart_width_brush,
 			chart_height,
@@ -29,11 +29,11 @@ function spottedTail() {
 
 			// Define the width based on the dimensions of the input container
 			var ctnr = document.getElementById(selection[idx][0].id);
-			chart.width(ctnr.offsetWidth);
-			chart.height(ctnr.offsetHeight);
 
-			margin = {top: 10, right: 0, bottom: (dimensions.height/3), left: 40};
-			marginBrush = {top: (dimensions.height * .8), right: (dimensions.width*.3), bottom: 20, left: 40};
+			dimensions = _.extend({width: ctnr.offsetWidth, height: ctnr.offsetHeight}, dimensions)
+
+			margin = _.extend({top: 10, right: 0, bottom: (dimensions.height/3), left: 40}, margin);
+			marginBrush = _.extend({top: (dimensions.height * .8), right: (dimensions.width*.3), bottom: 20, left: 40}, marginBrush);
 			chart_width = dimensions.width - margin.left - margin.right;
 			chart_width_brush = dimensions.width - marginBrush.left - marginBrush.right;
 			chart_height = dimensions.height - margin.top - margin.bottom;
@@ -214,40 +214,45 @@ function spottedTail() {
 		return yScaleBrush(yValue(d));
 	}
 
-
-	chart.margin = function(_) {
+	chart.margin = function(__) {
 		if (!arguments.length) return margin;
-		margin = _;
+		_.extend(margin, __);
 		return chart;
 	};
 
-	chart.width = function(_) {
+	chart.marginBrush = function(__) {
+		if (!arguments.length) return marginBrush;
+		_.extend(marginBrush, __);
+		return chart;
+	};
+
+	chart.width = function(__) {
 		if (!arguments.length) return dimensions.width;
-		dimensions.width = _;
+		dimensions.width = __;
 		return chart;
 	};
 
-	chart.height = function(_) {
+	chart.height = function(__) {
 		if (!arguments.length) return dimensions.height;
-		dimensions.height = _;
+		dimensions.height = __;
 		return chart;
 	};
 
-	chart.x = function(_) {
+	chart.x = function(__) {
 		if (!arguments.length) return xValue;
-		xValue = _;
+		xValue = __;
 		return chart;
 	};
 
-	chart.y = function(_) {
+	chart.y = function(__) {
 		if (!arguments.length) return yValue;
-		yValue = _;
+		yValue = __;
 		return chart;
 	};
 
-	chart.legend = function(_) {
+	chart.legend = function(__) {
 		if (!arguments.length) return legend;
-		legend = _;
+		legend = __;
 		return chart;
 	};
 
