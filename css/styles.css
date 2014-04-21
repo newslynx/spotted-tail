@@ -2,7 +2,8 @@ body{
   margin: 0;
 }
 #ST-chart{
-	width: 500px;
+  width: 100%;
+	max-width: 500px;
 	height: 200px;
 }
 .ST-canvas {

@@ -1,5 +1,7 @@
 function spottedTail() {
 
+	var selection;
+
 	var dimensions = {},
 			margin = {},
 			marginBrush = {},
@@ -24,13 +26,13 @@ function spottedTail() {
 			bisectDate = d3.bisector(function(d) { return d.date; }).left
 			ppDate = function(dObj) { return dObj.toDateString() };
 
-	function chart(selection) {
+	function chart(selection_) {
+		selection = selection_;
 		selection.each(function(data, idx) {
-
 			// Define the width based on the dimensions of the input container
 			var ctnr = document.getElementById(selection[idx][0].id);
 
-			dimensions = _.extend({width: ctnr.offsetWidth, height: ctnr.offsetHeight}, dimensions)
+			dimensions = {width: ctnr.offsetWidth, height: ctnr.offsetHeight};
 
 			margin = _.extend({top: 10, right: 0, bottom: (dimensions.height/3), left: 40}, margin);
 			marginBrush = _.extend({top: (dimensions.height * .8), right: (dimensions.width*.3), bottom: 20, left: 40}, marginBrush);
@@ -40,7 +42,7 @@ function spottedTail() {
 			chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
 
 			data.forEach(function(d, i) {
-				d.date = xValue(d);
+				if (typeof d.date == 'string') d.date = xValue(d);
 			});
 
 			color.domain(d3.keys(data[0]).filter(function(key) { return key !== 'date'; }));
@@ -79,6 +81,7 @@ function spottedTail() {
 					.range([chart_height_brush, 0]);
 
 			// Append the svg element
+			d3.select(this).select('svg').remove();
 			var svg = d3.select(this).append('svg').attr('class', 'ST-canvas');
 
 			// Clipping path
@@ -230,18 +233,6 @@ function spottedTail() {
 		return chart;
 	};
 
-	chart.width = function(__) {
-		if (!arguments.length) return dimensions.width;
-		dimensions.width = __;
-		return chart;
-	};
-
-	chart.height = function(__) {
-		if (!arguments.length) return dimensions.height;
-		dimensions.height = __;
-		return chart;
-	};
-
 	chart.x = function(__) {
 		if (!arguments.length) return xValue;
 		xValue = __;
@@ -258,7 +249,16 @@ function spottedTail() {
 		if (!arguments.length) return legend;
 		legend = __;
 		return chart;
-	};
+	};	
+
+	chart.throttled = function() {
+		return _.throttle(this, 300);
+	}
+
+	var chartThrottled = chart.throttled();
+	window.addEventListener('resize', function(event){
+		chartThrottled(selection);
+	});
 
 	return chart;
 }

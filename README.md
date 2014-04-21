@@ -9,7 +9,7 @@ The graph for article dashboard.
 * handle variable number line charts - done
 * hover points - done
 * colorable - done
-* responsive
+* responsive - done
 * hover labels respect bounds - done
 * legend
 * accept "impact events" and basic annotations
