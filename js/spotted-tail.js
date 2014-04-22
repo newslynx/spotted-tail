@@ -12,6 +12,7 @@ function spottedTail() {
 			xValue,
 			yValue,
 			legend,
+			notes,
 			color = d3.scale.category10(),
 			xScale = d3.time.scale(),
 			xScaleBrush = d3.time.scale(),
@@ -41,9 +42,8 @@ function spottedTail() {
 			chart_height = dimensions.height - margin.top - margin.bottom;
 			chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
 
-			data.forEach(function(d, i) {
-				if (typeof d.date == 'string') d.date = xValue(d);
-			});
+			data = parseDates(data);
+			notes = parseDates(notes);
 
 			color.domain(d3.keys(data[0]).filter(function(key) { return key !== 'date'; }));
 
@@ -172,8 +172,46 @@ function spottedTail() {
 					.attr('transform', 'translate(0,' + yScaleBrush.range()[0] + ')')
 					.call(xAxisBrush);
 
+			// Note container
+			var noteCtnr		 = svg.append('g')
+														.attr('class', 'ST-notes')
+														.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+			var note = noteCtnr.selectAll('.ST-note')
+					.data(notes)
+				.enter().append('g')
+					.attr('class', 'ST-note')
+					.attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
+
+			note.append('line')
+				.attr('y1', 0)
+				.attr('y2', chart_height)
+				.attr('stroke-dasharray', '5,2')
+
+			note.append('text')
+				.text(function(d) { return d.text } )
+				.attr('dx', '.32em')
+				.attr('dy', '.8em')
+				.style('text-anchor', 'start')
+				.style('display', 'none')
+
+			note.append('rect')
+				.attr('width', 10)
+				.attr('height', chart_height)
+				.attr('data-uid', function(d) { return d.uid } )
+				.attr('transform', 'translate(-5,0)') // Make this half the width
+				.on('mouseover', function(d){ noteTooltip(this, true) })
+				.on('mouseout', function(d){ noteTooltip(this, false) })
+				.on('click', function() {console.log('do something')}); // TODO
+
+			function noteTooltip(el, isActive){
+				d3.select(el.parentNode).classed('ST-active', isActive);
+			}
+
 			function brushed(d) {
 				xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
+				// TODO, wrap this up into an update function
+				noteCtnr.selectAll('.ST-note').attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
 				lineChartCtnr.selectAll('.ST-metric-line .ST-line').attr('d', function(d){return line(d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
 			}
@@ -199,6 +237,16 @@ function spottedTail() {
 
 	function isArray(testVar){
 		return Object.prototype.toString.call( testVar ) == '[object Array]';
+	}
+
+	function parseDates(arr){
+		// var uid = 0
+		arr.forEach(function(d, i) {
+			if (typeof d.date == 'string') d.date = xValue(d);
+			// d.uid = 'a'+uid;
+			// uid++
+		});
+		return arr
 	}
 
 	// The x-accessor for the path generator; xScale ∘ xValue.
@@ -257,6 +305,25 @@ function spottedTail() {
 		legend = __;
 		return chart;
 	};	
+
+	chart.notes = function(__){
+		if (!arguments.length) return notes;
+		notes = __;
+		return chart
+	}
+
+	chart.addNote = function(__){
+		if (!arguments.length) return notes;
+		notes.push(__);
+		return chart
+	}
+
+	chart.update = function(__){
+		// TODO, trigger update and note redraw
+		// if (!arguments.length) return notes;
+		// notes.push(__);
+		return chart
+	}
 
 	// chart.throttled = function() {
 	// 	return _.throttle(this, 300);
