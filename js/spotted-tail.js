@@ -34,8 +34,8 @@ function spottedTail() {
 
 			dimensions = {width: ctnr.offsetWidth, height: ctnr.offsetHeight};
 
-			margin = _.extend({top: 10, right: 0, bottom: (dimensions.height/3), left: 40}, margin);
-			marginBrush = _.extend({top: (dimensions.height * .8), right: (dimensions.width*.3), bottom: 20, left: 40}, marginBrush);
+			margin = extend({top: 10, right: 0, bottom: (dimensions.height/3), left: 40}, margin);
+			marginBrush = extend({top: (dimensions.height * .8), right: (dimensions.width*.3), bottom: 20, left: 40}, marginBrush);
 			chart_width = dimensions.width - margin.left - margin.right;
 			chart_width_brush = dimensions.width - marginBrush.left - marginBrush.right;
 			chart_height = dimensions.height - margin.top - margin.bottom;
@@ -221,15 +221,22 @@ function spottedTail() {
 		return yScaleBrush(yValue(d));
 	}
 
+	function extend(defaults, opts){
+		for (var prop in opts){
+			defaults[prop] = opts[prop]
+		}
+		return defaults
+	}
+
 	chart.margin = function(__) {
 		if (!arguments.length) return margin;
-		_.extend(margin, __);
+		extend(margin, __);
 		return chart;
 	};
 
 	chart.marginBrush = function(__) {
 		if (!arguments.length) return marginBrush;
-		_.extend(marginBrush, __);
+		extend(marginBrush, __);
 		return chart;
 	};
 
@@ -251,13 +258,13 @@ function spottedTail() {
 		return chart;
 	};	
 
-	chart.throttled = function() {
-		return _.throttle(this, 300);
-	}
+	// chart.throttled = function() {
+	// 	return _.throttle(this, 300);
+	// }
 
-	var chartThrottled = chart.throttled();
+	// var chartThrottled = chart.throttled();
 	window.addEventListener('resize', function(event){
-		chartThrottled(selection);
+		chart(selection);
 	});
 
 	return chart;
