@@ -93,7 +93,8 @@ function spottedTail() {
 
 			// Lines
 			var lineChartCtnr = svg.append('g')
-														.attr('class', 'ST-line-g')
+														.classed('ST-line-g', true)
+														.classed('ST-container', true)
 														.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 			// For mouseevents										 
 			lineChartCtnr.append('rect')
@@ -111,7 +112,8 @@ function spottedTail() {
 
 			// Brush container
 			var brushCtnr		 = svg.append('g')
-														.attr('class', 'ST-brush')
+														.classed('ST-brush', true)
+														.classed('ST-container', true)
 														.attr('transform', 'translate(' + marginBrush.left + ',' + marginBrush.top + ')')
 
 			// line, brusher, axes
@@ -173,36 +175,71 @@ function spottedTail() {
 					.call(xAxisBrush);
 
 			// Note container
-			var noteCtnr		 = svg.append('g')
-														.attr('class', 'ST-notes')
-														.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+			var noteCtnrLines		 = lineChartCtnr
+														.append('g')
+														.classed('ST-notes', true);
 
-			var note = noteCtnr.selectAll('.ST-note')
+			var noteLines = noteCtnrLines.selectAll('.ST-note')
 					.data(notes)
 				.enter().append('g')
 					.attr('class', 'ST-note')
+					.attr('data-note-type', function(d) { return d.type })
 					.attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
 
-			note.append('line')
+			noteLines.append('line')
 				.attr('y1', 0)
 				.attr('y2', chart_height)
 				.attr('stroke-dasharray', '5,2')
 
-			note.append('text')
+			noteLines.append('text')
 				.text(function(d) { return d.text } )
 				.attr('dx', '.32em')
 				.attr('dy', '.8em')
 				.style('text-anchor', 'start')
 				.style('display', 'none')
 
-			note.append('rect')
+			noteLines.append('rect')
 				.attr('width', 10)
 				.attr('height', chart_height)
 				.attr('data-uid', function(d) { return d.uid } )
-				.attr('transform', 'translate(-5,0)') // Make this half the width
+				.attr('transform', 'translate(-5,0)') // Make this half the width so it's centered within the line
 				.on('mouseover', function(d){ noteTooltip(this, true) })
 				.on('mouseout', function(d){ noteTooltip(this, false) })
 				.on('click', function() {console.log('do something')}); // TODO
+
+
+			// Note container for brusher
+			var noteCtnrBrush		 = brushCtnr
+														.append('g')
+														.classed('ST-notes', true);
+
+			var noteBrush = noteCtnrBrush.selectAll('.ST-note')
+					.data(notes)
+				.enter().append('g')
+					.attr('class', 'ST-note')
+					.attr('data-note-type', function(d) { return d.type })
+					.attr('transform', function(d){ return 'translate(' + XBrush(d) + ',0)'  })
+
+			noteBrush.append('line')
+				.attr('y1', 0)
+				.attr('y2', yScaleBrush.range()[0])
+				.attr('stroke-dasharray', '5,2')
+
+			// noteLines.append('text')
+			// 	.text(function(d) { return d.text } )
+			// 	.attr('dx', '.32em')
+			// 	.attr('dy', '.8em')
+			// 	.style('text-anchor', 'start')
+			// 	.style('display', 'none')
+
+			// noteLines.append('rect')
+			// 	.attr('width', 10)
+			// 	.attr('height', yScaleBrush.range()[0])
+			// 	.attr('data-uid', function(d) { return d.uid } )
+			// 	.attr('transform', 'translate(-5,0)') // Make this half the width so it's centered within the line
+			// 	.on('mouseover', function(d){ noteTooltip(this, true) })
+			// 	.on('mouseout', function(d){ noteTooltip(this, false) })
+			// 	.on('click', function() {console.log('do something')}); // TODO
 
 			function noteTooltip(el, isActive){
 				d3.select(el.parentNode).classed('ST-active', isActive);
@@ -211,7 +248,7 @@ function spottedTail() {
 			function brushed(d) {
 				xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
 				// TODO, wrap this up into an update function
-				noteCtnr.selectAll('.ST-note').attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
+				noteCtnrLines.selectAll('.ST-note').attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
 				lineChartCtnr.selectAll('.ST-metric-line .ST-line').attr('d', function(d){return line(d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
 			}
