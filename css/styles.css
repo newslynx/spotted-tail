@@ -5,6 +5,7 @@ body{
   width: 100%;
 	max-width: 500px;
 	height: 200px;
+  position: relative;
 }
 .ST-canvas {
   font: 10px sans-serif;
@@ -55,4 +56,9 @@ body{
 }
 .ST-note.ST-active text{
   display: block !important;
+}
+.ST-note-btns{
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
 }

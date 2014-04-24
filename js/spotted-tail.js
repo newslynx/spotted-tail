@@ -30,13 +30,15 @@ function spottedTail() {
 	function chart(selection_) {
 		selection = selection_;
 		selection.each(function(data, idx) {
+			d3.select(this).html('');
+			addButtons(this);
 			// Define the width based on the dimensions of the input container
 			var ctnr = document.getElementById(selection[idx][0].id);
 
 			dimensions = {width: ctnr.offsetWidth, height: ctnr.offsetHeight};
 
 			margin = extend({top: 10, right: 0, bottom: (dimensions.height/3), left: 40}, margin);
-			marginBrush = extend({top: (dimensions.height * .8), right: (dimensions.width*.3), bottom: 20, left: 40}, marginBrush);
+			marginBrush = extend({top: (dimensions.height * .8), right: (dimensions.width*.38), bottom: 20, left: 40}, marginBrush);
 			chart_width = dimensions.width - margin.left - margin.right;
 			chart_width_brush = dimensions.width - marginBrush.left - marginBrush.right;
 			chart_height = dimensions.height - margin.top - margin.bottom;
@@ -81,7 +83,6 @@ function spottedTail() {
 					.range([chart_height_brush, 0]);
 
 			// Append the svg element
-			d3.select(this).select('svg').remove();
 			var svg = d3.select(this).append('svg').attr('class', 'ST-canvas');
 
 			// Clipping path
@@ -285,6 +286,29 @@ function spottedTail() {
 			// uid++
 		});
 		return arr
+	}
+
+	function addButtons(container){
+		var noteBtns = d3.select(container).append('div')
+			.classed('ST-note-btns', true).selectAll('buttons')
+			.data(['note','event']);
+
+		noteBtns.enter()
+			.append('button')
+			.html(function(d) { return 'Add ' + d })
+			.on('click', function(d) { handleBtnClick(d.name) })
+	}
+
+	function handleBtnClick(type){
+		// Show different modal templates based on the button click
+		var new_note = 		{
+			date: 'Sep 2009',
+			text: 'An added note',
+			type: ['note']
+		}
+
+		notes.push(new_note);
+		chart.update();
 	}
 
 	// The x-accessor for the path generator; xScale ∘ xValue.
