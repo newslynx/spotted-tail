@@ -357,19 +357,14 @@ function spottedTail() {
 	}
 
 	chart.update = function(__){
-		// TODO, trigger update and note redraw
-		// if (!arguments.length) return notes;
-		// notes.push(__);
+		// TODO, instead of ditching redrawing the whole svg, trigger a d3 update and note redraw
+		if (!arguments.length) { chart(selection); return chart };
+		chart(__);
 		return chart
 	}
 
-	// chart.throttled = function() {
-	// 	return _.throttle(this, 300);
-	// }
-
-	// var chartThrottled = chart.throttled();
 	window.addEventListener('resize', function(event){
-		chart(selection);
+		chart.update(selection);
 	});
 
 	return chart;

@@ -16,7 +16,7 @@ The graph for article dashboard.
 * accept "impact events" and basic annotations
 	* an "impact event" is a moment such as award
 	* basic annotation is some relevante event such "this is when our main account tweeted the story" but that is not itself a measure of impact
-* design note labels / interaction
+* design note labels / interaction - basic version done
 * legend
 * change responsive change to a d3 update instead of rewriting svg
 
