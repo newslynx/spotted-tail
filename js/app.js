@@ -9,12 +9,17 @@
 		{
 			date: 'Sep 2007',
 			text: 'A sample note',
-			type: 'impact-event'
+			type: ['note']
 		},
 		{
 			date: 'Jul 2005',
-			text: 'Another note',
-			type: 'social-media-event'
+			text: 'Social media event, impact event',
+			type: ['impact-event', 'social-media-event']
+		},
+		{
+			date: 'Aug 2006',
+			text: 'Impact event',
+			type: ['impact-event']
 		}
 	]
 				

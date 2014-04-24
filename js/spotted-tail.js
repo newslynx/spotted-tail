@@ -177,13 +177,14 @@ function spottedTail() {
 			// Note container
 			var noteCtnrLines		 = lineChartCtnr
 														.append('g')
-														.classed('ST-notes', true);
+														.classed('ST-notes', true)
+														.style('clip-path', 'url(#ST-clip)');
 
 			var noteLines = noteCtnrLines.selectAll('.ST-note')
 					.data(notes)
 				.enter().append('g')
 					.attr('class', 'ST-note')
-					.attr('data-note-type', function(d) { return d.type })
+					.attr('data-note-type', function(d) { return d.type.join('|') })
 					.attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
 
 			noteLines.append('line')
