@@ -1,0 +1,61 @@
+@import 'nib'
+
+#ST-chart
+	position relative
+	width 100%
+	max-width 500px
+	height 200px
+
+.ST-canvas 
+	font 10px sans-serif
+
+.ST-canvas .ST-line 
+	fill none
+	stroke steelblue
+	stroke-width 1.5px
+
+.ST-canvas .ST-axis, text
+	cursor default
+	-webkit-touch-callout none
+	-webkit-user-select none
+	-khtml-user-select none
+	-moz-user-select -moz-none
+	-ms-user-select none
+	user-select none
+
+.ST-canvas .ST-axis path,
+.ST-canvas .ST-axis line 
+	fill none
+	stroke #000
+	shape-rendering crispEdges
+
+.ST-canvas .ST-brush .extent 
+	stroke #fff
+	fill-opacity .125
+	shape-rendering crispEdges
+
+.ST-canvas .ST-point, .ST-canvas path, .ST-canvas line
+	pointer-events: none
+
+.ST-canvas .ST-point circle 
+	fill: none
+	stroke: #444
+
+.ST-note line
+	stroke: #ccc
+	stroke-width: 1px
+
+.ST-note rect
+	fill: none
+	pointer-events: all
+
+.ST-note.ST-active line
+	stroke: #000
+
+.ST-note.ST-active text
+	display: block !important
+
+.ST-note-btns
+	position: absolute
+	right: 10px
+	bottom: 0

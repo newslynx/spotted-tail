@@ -295,7 +295,7 @@ function spottedTail() {
 
 		noteBtns.enter()
 			.append('button')
-			.html(function(d) { return 'Add ' + d })
+			.html(function(d) { return '+ ' + d })
 			.on('click', function(d) { handleBtnClick(d.name) })
 	}
 
