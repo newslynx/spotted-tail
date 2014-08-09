@@ -62,7 +62,7 @@ function spottedTail() {
 			marginBrush = extend({top: (dimensions.height * .9), right: 0, bottom: 0, left: margin.left}, marginBrush);
 			chart_width = dimensions.width - margin.left - margin.right;
 			chart_width_brush = dimensions.width - marginBrush.left - marginBrush.right;
-			chart_height = .35;
+			chart_height = .38;
 			chart_height = chart_height*(dimensions.height - margin.top - margin.bottom);
 			chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
 			events_row_height = .3*chart_height;
@@ -149,7 +149,7 @@ function spottedTail() {
 
 			// Events container
 			var eventsCntnr  = svg.append('g')
-														.classed('ST-events', true)
+														.classed('ST-categories', true)
 														.classed('ST-container', true)
 														.attr('transform', 'translate(0,' + (chart_height + marginEvents.top + marginEvents.top_buffer) + ')');
 														// .attr('transform', 'translate(' + marginEvents.left + ',' + (chart_height + marginEvents.top + marginEvents.top_buffer) + ')');
@@ -212,24 +212,23 @@ function spottedTail() {
 						.attr('dy', '.35em');
 
 			// Events container, let's use `_` suffix to mean the enter selection
-			var eventTimelineCntnr_ = eventsCntnr.selectAll('.ST-event-timeline')
+			var eventTimelineCntnr_ = eventsCntnr.selectAll('.ST-category-timeline')
 				.data(eventSchema).enter();
 
 			var eventTimelineCntnr = eventTimelineCntnr_.append('g')
-				.classed('ST-event-timeline', true)
+				.classed('ST-category-timeline', true)
 				.attr('transform', function(d, i) { return 'translate(0,' + (i*events_row_height) + ')' })
 			
 			eventTimelineCntnr.append('line')
-				.classed('ST-event-timeline-hr', true)
+				.classed('ST-category-timeline-hr', true)
 				.attr('x1', 0)
-				.attr('x2', chart_width + margin.left)
-				.attr('transform', 'translate(0,' + 0 + ')');
+				.attr('x2', chart_width + margin.left);
 
 			eventTimelineCntnr.append('text')
 				.attr('text-anchor', 'end')
-				.classed('ST-event-timeline-name', true)
+				.classed('ST-category-timeline-name', true)
 				.html(function(d) { return d.name })
-				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ ( events_row_height/2 + this.getBBox().height/4 ) +')' }); // -10 to align with the axis numbers
+				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ ( events_row_height/2 + this.getBBox().height/3 ) +')' }); // -10 to align with the axis numbers
 
 			// Add all the events to this row
 			var eventItems = eventTimelineCntnr.append('g')
@@ -245,6 +244,12 @@ function spottedTail() {
 				.attr('cx', function(d){ return xScale(d.date) })
 				.attr('cy', events_row_height/2 );
 
+			// Add a bottom rule
+			eventsCntnr.append('line')
+				.classed('ST-category-timeline-hr', true)
+				.attr('x1', 0)
+				.attr('x2', chart_width + margin.left)
+				.attr('transform', 'translate(0,' + (eventsCntnr.node().getBBox().height + events_row_height/3) + ')');
 
 			// Update the brush path
 			brushCtnr.selectAll('.ST-metric-line')
