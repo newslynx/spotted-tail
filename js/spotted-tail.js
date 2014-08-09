@@ -459,7 +459,7 @@ function spottedTail() {
 						d1 = data[i];
 				var d = x0 - d0.date > d1.date - x0 ? d1 : d0;
 				var point = d3.selectAll('.ST-point');
-				point.attr('transform', function(dd) {return 'translate(' + X(d) + ',' + yScale(d[dd.name]) + ')' });
+				point.attr('transform', function(dd) { return 'translate(' + X(d) + ',' + yScales[dd.group](d[dd.name]) + ')' });
 				point.select('text')
 					.text(function(dd) { return d[dd.name] + ' ' + (legend[dd.name].metric || dd.name) })
 					.attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_buffer*2) ? mouse_buffer : (-mouse_buffer - this.getBBox().width) });
