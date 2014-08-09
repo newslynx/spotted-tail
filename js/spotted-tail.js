@@ -62,10 +62,10 @@ function spottedTail() {
 			marginBrush = extend({top: (dimensions.height * .9), right: 0, bottom: 0, left: margin.left}, marginBrush);
 			chart_width = dimensions.width - margin.left - margin.right;
 			chart_width_brush = dimensions.width - marginBrush.left - marginBrush.right;
-			chart_height = .25;
+			chart_height = .35;
 			chart_height = chart_height*(dimensions.height - margin.top - margin.bottom);
 			chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
-			events_row_height = 45;
+			events_row_height = .3*chart_height;
 			data = parseDates(data);
 			// notes = parseDates(notes);
 			events = parseDates(events);
@@ -115,7 +115,8 @@ function spottedTail() {
 					.attr('id', 'ST-clip')
 				.append('rect')
 					.attr('width', chart_width)
-					.attr('height', chart_height);
+					.attr('height', dimensions.height);
+					console.log(dimensions.height)
 
 			// Lines
 			var lineChartCtnr = svg.append('g')
@@ -211,24 +212,6 @@ function spottedTail() {
 					.append('text')
 						.attr('dy', '.35em');
 
-			// Update the brush path
-			brushCtnr.selectAll('.ST-metric-line')
-					.data(metrics)
-				.enter().append('g')
-					.attr('class', 'ST-metric-line');
-			
-			// Add the line series
-			brushCtnr.selectAll('.ST-metric-line')
-				.append('path')
-					.attr('class', 'ST-line')
-					.attr('d', function(d) { return lineBrush(d.values); })
-					.style('stroke', function(d) { return legend[d.name].color || color(d.name); });
-
-			// And its xAxis
-			// brushCtnr.select('.ST-x.ST-axis')
-			// 		.attr('transform', 'translate(0,' + yScaleBrush.range()[0] + ')')
-			// 		.call(xAxisBrush);
-
 			// Events container, let's use `_` suffix to mean the enter selection
 			var eventTimelineCntnr_ = eventsCntnr.selectAll('.ST-event-timeline')
 				.data(eventSchema).enter();
@@ -253,13 +236,41 @@ function spottedTail() {
 			var eventItems = eventTimelineCntnr.append('g')
 				.classed('ST-events', true)
 				.selectAll('.ST-timeline-event')
-				.data(function(d) { return events.filter(function(f){ return f.tags.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) }).enter()
+				.data(function(d) { return events.filter(function(f){ return f.tags.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) }).enter();
 
 			eventItems.append('circle')
 				.classed('ST-event-circle', true)
+				.style('clip-path', 'url(#ST-clip)')
 				.attr('r', 4.5)
-				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ events_row_height/2 +')' }) // -10 to align with the axis numbers
+				.attr('transform', function(d) { return 'translate('+(margin.left)+',0)' })
 				.attr('cx', function(d){ return xScale(d.date) })
+				.attr('cy', events_row_height/2 );
+
+
+			// Update the brush path
+			brushCtnr.selectAll('.ST-metric-line')
+					.data(metrics)
+				.enter().append('g')
+					.attr('class', 'ST-metric-line');
+			
+			// Add the line series
+			brushCtnr.selectAll('.ST-metric-line')
+				.append('path')
+					.attr('class', 'ST-line')
+					.attr('d', function(d) { return lineBrush(d.values); })
+					.style('stroke', function(d) { return legend[d.name].color || color(d.name); })
+			
+			brushCtnr.selectAll('.ST-event-circle').data(events).enter()
+						.append('circle')
+						.classed('.ST-event-circle', true)
+						.attr('r', 4.5)
+						.attr('transform', function(d) { return 'translate(0,'+(yScaleBrush.range()[0] - this.getBBox().height) +')' })
+						.attr('cx', function(d){ return xScale(d.date) });
+
+			// And its xaxis
+			// brushCtnr.select('.ST-x.ST-axis')
+			// 		.attr('transform', 'translate(0,' + yScaleBrush.range()[0] + ')')
+			// 		.call(xAxisBrush);
 
 			// Note container
 			/*var noteCtnrLines		 = lineChartCtnr

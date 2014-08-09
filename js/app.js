@@ -50,7 +50,7 @@
 
 	var events = [
 		{
-			date: '2002-01-02',
+			date: '2000-04-01',
 			name: 'Jon Stewart talked about us',
 			tags: [
 				{
@@ -61,7 +61,7 @@
 			related_links: []
 		},
 		{
-			date: '2002-05-02',
+			date: '2002-06-02',
 			name: 'Jon Stewart talked about us',
 			tags: [
 				{
