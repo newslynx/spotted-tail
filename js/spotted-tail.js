@@ -31,6 +31,7 @@ function spottedTail() {
 			// notes,
 			eventSchema,
 			events,
+			onBrush,
 			color = d3.scale.category10(),
 			xScale = d3.time.scale(),
 			xScaleBrush = d3.time.scale(),
@@ -57,8 +58,7 @@ function spottedTail() {
 			dimensions = {width: ctnr.offsetWidth, height: ctnr.offsetHeight};
 
 			margin = extend({top: 10, right: 0, bottom: 0, left: 100}, margin);
-
-			marginEvents = extend({top: margin.top, top_buffer: 35, right: 0, bottom: 20, left: margin.left}, marginBrush); // topBuffer is for the bottom axis
+			marginEvents = extend({top: margin.top, top_buffer: 35, right: 0, bottom: 20, left: margin.left}, marginEvents); // topBuffer is for the bottom axis
 			marginBrush = extend({top: (dimensions.height * .9), right: 0, bottom: 0, left: margin.left}, marginBrush);
 			chart_width = dimensions.width - margin.left - margin.right;
 			chart_width_brush = dimensions.width - marginBrush.left - marginBrush.right;
@@ -115,8 +115,7 @@ function spottedTail() {
 					.attr('id', 'ST-clip')
 				.append('rect')
 					.attr('width', chart_width)
-					.attr('height', dimensions.height);
-					console.log(dimensions.height)
+					.attr('height', chart_height);
 
 			// Lines
 			var lineChartCtnr = svg.append('g')
@@ -351,6 +350,8 @@ function spottedTail() {
 				lineChartCtnr.selectAll('.ST-metric-line .ST-line').attr('d', function(d){ return line(d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
 				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.date) });
+				// Report this out to the app.js
+				onBrush(xScale.domain())
 			}
 
 			function mousemove(d) {
@@ -377,11 +378,8 @@ function spottedTail() {
 	}
 
 	function parseDates(arr){
-		// var uid = 0
 		arr.forEach(function(d, i) {
 			if (typeof d.date == 'string') d.date = xValue(d);
-			// d.uid = 'a'+uid;
-			// uid++
 		});
 		return arr
 	}
@@ -400,7 +398,7 @@ function spottedTail() {
 	function handleBtnClick(type){
 		// Show different modal templates based on the button click
 		var new_note = 		{
-			date: 'Sep 2009',
+			date: 'Sep 2001',
 			text: 'An added note',
 			type: ['note']
 		}
@@ -487,6 +485,11 @@ function spottedTail() {
 	chart.eventSchema = function(__){
 		if (!arguments.length) return eventSchema;
 		eventSchema = __;
+		return chart;
+	}
+	chart.onBrush = function(__){
+		if (!arguments.length) return onBrush;
+		onBrush = __;
 		return chart;
 	}
 

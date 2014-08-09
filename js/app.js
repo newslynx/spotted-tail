@@ -78,7 +78,10 @@
 			.y(function(d) { return +d.count; })
 			.legend(legend)
 			.eventSchema(eventSchema)
-			.events(events);
+			.events(events)
+			.onBrush(function(dateRange){
+				console.log(dateRange)
+			})
 			// .notes(notes);
 
 	d3.csv('data/dummy-data.csv', drawChart);
