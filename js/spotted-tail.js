@@ -46,6 +46,7 @@ function spottedTail() {
 			linesBrush = {},
 			brush = d3.svg.brush().x(xScaleBrush),
 			bisectDate = d3.bisector(function(d) { return d.date; }).left,
+			ppNumber = function(str) { return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); },
 			ppDate = function(dObj) { return dObj.toDateString() };
 
 			yScales['a'] = d3.scale.linear();
@@ -256,7 +257,7 @@ function spottedTail() {
 
 			// And the y
 			lineChartCtnr.selectAll('.ST-y.ST-axis[data-group="b"]')
-					.attr('transform', 'translate('+chart_width+',0)')
+					.attr('transform', 'translate('+(chart_width - 5)+',0)') // Bump it over to the left a little bit
 					.call(yAxes['b']);
 
 			// lineChartCtnr.selectAll('.ST-y.ST-axis')
@@ -461,7 +462,7 @@ function spottedTail() {
 				var point = d3.selectAll('.ST-point');
 				point.attr('transform', function(dd) { return 'translate(' + X(d) + ',' + yScales[dd.group](d[dd.name]) + ')' });
 				point.select('text')
-					.text(function(dd) { return d[dd.name] + ' ' + (legend[dd.name].metric || dd.name) })
+					.text(function(dd) { return ppNumber(d[dd.name]) + ' ' + (legend[dd.name].metric || dd.name) })
 					.attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_buffer*2) ? mouse_buffer : (-mouse_buffer - this.getBBox().width) });
 			}
 
