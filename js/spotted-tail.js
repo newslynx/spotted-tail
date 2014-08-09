@@ -6,9 +6,9 @@ function spottedTail() {
 
 	var customTimeFormat = d3.time.format.multi([
 		['.%L', function(d) { return d.getMilliseconds(); }],
-		[':%S', function(d) { return d.getSeconds(); }],
-		['%I:%M', function(d) { return d.getMinutes(); }],
-		['%I %p', function(d) { return d.getHours(); }],
+		// [':%S', function(d) { return d.getSeconds(); }],
+		// ['%I:%M', function(d) { return d.getMinutes(); }],
+		// ['%I %p', function(d) { return d.getHours(); }],
 		// ['%a %d', function(d) { return d.getDay() && d.getDate() != 1; }],
 		['%b %e', function(d) { return d.getDate() != 1; }],
 		['%b', function(d) { return d.getMonth(); }],
@@ -115,12 +115,11 @@ function spottedTail() {
 				.map(metrics);
 
 			var x_domain = d3.extent(data, function(d) { return d.datetime; });
-			y_domains['a'] = [0, 
-				d3.max(metrics['a'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
-			];
-			y_domains['b'] = [0, 
-				d3.max(metrics['b'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
-			];
+			var y_max = {};
+			y_max['a'] = d3.max(metrics['a'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
+			y_max['b'] = d3.max(metrics['b'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
+			y_domains['a'] = [0, (y_max['a'] + y_max['a']*.2)];
+			y_domains['b'] = [0, (y_max['b'] + y_max['a']*.2)];
 
 			// Update the x-scale.
 			xScale
