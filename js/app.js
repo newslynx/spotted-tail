@@ -7,17 +7,17 @@
 	}
 	var notes = [
 		{
-			date: 'Sep 2007',
+			date: 'Sep 2001',
 			text: 'A sample note',
 			type: ['note']
 		},
 		{
-			date: 'Jul 2005',
+			date: 'Jul 2002',
 			text: 'Social media event, impact event',
 			type: ['impact-event', 'social-media-event']
 		},
 		{
-			date: 'Aug 2006',
+			date: 'Aug 2001',
 			text: 'Impact event',
 			type: ['impact-event']
 		}

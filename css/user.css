@@ -1,6 +1,6 @@
 .ST-note[data-note-type*="impact-event"] line {
-  stroke: #0f0;
+  stroke: #fc0;
 }
 .ST-note[data-note-type*="social-media-event"] line {
-  stroke: #ee3224;
+  stroke: #0cf;
 }

@@ -2,6 +2,17 @@ function spottedTail() {
 
 	var selection;
 
+	var customTimeFormat = d3.time.format.multi([
+		[".%L", function(d) { return d.getMilliseconds(); }],
+		[":%S", function(d) { return d.getSeconds(); }],
+		["%I:%M", function(d) { return d.getMinutes(); }],
+		["%I %p", function(d) { return d.getHours(); }],
+		["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
+		["%b %d", function(d) { return d.getDate() != 1; }],
+		["%b", function(d) { return d.getMonth(); }],
+		["%Y", function() { return true; }]
+	]);
+
 	var dimensions = {},
 			margin = {},
 			marginBrush = {},
@@ -18,9 +29,9 @@ function spottedTail() {
 			xScaleBrush = d3.time.scale(),
 			yScale = d3.scale.linear(),
 			yScaleBrush = d3.scale.linear(),
-			xAxis = d3.svg.axis().scale(xScale).orient('bottom').tickSize(6, 0),
-			yAxis = d3.svg.axis().scale(yScale).orient('left'),
-			xAxisBrush = d3.svg.axis().scale(xScaleBrush).orient('bottom').tickSize(6, 0),
+			xAxis = d3.svg.axis().scale(xScale).orient('bottom').tickSize(6, 0).tickFormat(customTimeFormat),
+			yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(4),
+			xAxisBrush = d3.svg.axis().scale(xScaleBrush).orient('bottom'),//.tickSize(6, 0),
 			line = d3.svg.line().x(X).y(Y)
 			lineBrush = d3.svg.line().x(XBrush).y(YBrush)
 			brush = d3.svg.brush().x(xScaleBrush),
@@ -132,15 +143,6 @@ function spottedTail() {
 					.data(metrics)
 				.enter().append('g')
 					.attr('class', 'ST-metric-line')
-					.append('g')
-						.attr('class', 'ST-point')
-						.style('display', 'none')
-					.append('circle')
-						.attr('r', 3.5)
-			
-			lineChartCtnr.selectAll('.ST-point')
-					.append('text')
-						.attr('dy', '.35em');
 
 			lineChartCtnr.selectAll('.ST-metric-line')
 				.append('path')
@@ -158,6 +160,19 @@ function spottedTail() {
 			lineChartCtnr.select('.ST-y.ST-axis')
 					.call(yAxis);
 
+			// And focal points
+			lineChartCtnr.selectAll('.ST-metric-line')
+					.append('g')
+						.attr('class', 'ST-point')
+						.style('display', 'none')
+					.append('circle')
+						.attr('r', 3);
+
+			// And text components
+			lineChartCtnr.selectAll('.ST-point')
+					.append('text')
+						.attr('dy', '.35em');
+
 			// Update the brush path
 			brushCtnr.selectAll('.ST-metric-line')
 					.data(metrics)
@@ -171,9 +186,10 @@ function spottedTail() {
 					.style('stroke', function(d) { return legend[d.name].color || color(d.name); });
 
 			// And its xAxis
-			brushCtnr.select('.ST-x.ST-axis')
-					.attr('transform', 'translate(0,' + yScaleBrush.range()[0] + ')')
-					.call(xAxisBrush);
+			// brushCtnr.select('.ST-x.ST-axis')
+			// 		.attr('transform', 'translate(0,' + yScaleBrush.range()[0] + ')')
+			// 		.call(xAxisBrush);
+
 
 			// Note container
 			var noteCtnrLines		 = lineChartCtnr
