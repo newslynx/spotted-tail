@@ -337,8 +337,9 @@ function spottedTail() {
 				xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
 				// TODO, wrap this up into an update function
 				// noteCtnrLines.selectAll('.ST-note').attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
-				lineChartCtnr.selectAll('.ST-metric-line .ST-line').attr('d', function(d){return line(d.values) });
+				lineChartCtnr.selectAll('.ST-metric-line .ST-line').attr('d', function(d){ return line(d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
+				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.date) });
 			}
 
 			function mousemove(d) {
