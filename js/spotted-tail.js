@@ -1,16 +1,18 @@
 function spottedTail() {
 
+	'use strict'
+
 	var selection;
 
 	var customTimeFormat = d3.time.format.multi([
-		[".%L", function(d) { return d.getMilliseconds(); }],
-		[":%S", function(d) { return d.getSeconds(); }],
-		["%I:%M", function(d) { return d.getMinutes(); }],
-		["%I %p", function(d) { return d.getHours(); }],
-		["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
-		["%b %d", function(d) { return d.getDate() != 1; }],
-		["%b", function(d) { return d.getMonth(); }],
-		["%Y", function() { return true; }]
+		['.%L', function(d) { return d.getMilliseconds(); }],
+		[':%S', function(d) { return d.getSeconds(); }],
+		['%I:%M', function(d) { return d.getMinutes(); }],
+		['%I %p', function(d) { return d.getHours(); }],
+		['%a %d', function(d) { return d.getDay() && d.getDate() != 1; }],
+		['%b %d', function(d) { return d.getDate() != 1; }],
+		['%b', function(d) { return d.getMonth(); }],
+		['%Y', function() { return true; }]
 	]);
 
 	var dimensions = {},
@@ -30,12 +32,12 @@ function spottedTail() {
 			yScale = d3.scale.linear(),
 			yScaleBrush = d3.scale.linear(),
 			xAxis = d3.svg.axis().scale(xScale).orient('bottom').tickSize(6, 0).tickFormat(customTimeFormat),
-			yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(4),
-			xAxisBrush = d3.svg.axis().scale(xScaleBrush).orient('bottom'),//.tickSize(6, 0),
-			line = d3.svg.line().x(X).y(Y)
-			lineBrush = d3.svg.line().x(XBrush).y(YBrush)
+			yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(4).tickFormat(d3.format('s')),
+			xAxisBrush = d3.svg.axis().scale(xScaleBrush).orient('bottom'),
+			line = d3.svg.line().x(X).y(Y),
+			lineBrush = d3.svg.line().x(XBrush).y(YBrush),
 			brush = d3.svg.brush().x(xScaleBrush),
-			bisectDate = d3.bisector(function(d) { return d.date; }).left
+			bisectDate = d3.bisector(function(d) { return d.date; }).left,
 			ppDate = function(dObj) { return dObj.toDateString() };
 
 	function chart(selection_) {
@@ -58,14 +60,16 @@ function spottedTail() {
 			data = parseDates(data);
 			notes = parseDates(notes);
 
-			color.domain(d3.keys(data[0]).filter(function(key) { return key !== 'date'; }));
+			// Set our value categories to everything except for things called date
+			color.domain(Object.keys(legend));
 
 			var metrics = color.domain().map(function(name) {
-					return { name: name,
-					values: data.map(function(d) {
-						return {date: d.date, count: +d[name]};
-					})
-				}
+					return { 
+						name: name,
+						values: data.map(function(d) {
+							return {date: d.date, count: +d[name]};
+						})
+					}
 			});
 
 			var x_domain = d3.extent(data, function(d) { return d.date; }),
