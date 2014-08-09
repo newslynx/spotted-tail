@@ -9,8 +9,8 @@ function spottedTail() {
 		[':%S', function(d) { return d.getSeconds(); }],
 		['%I:%M', function(d) { return d.getMinutes(); }],
 		['%I %p', function(d) { return d.getHours(); }],
-		['%a %d', function(d) { return d.getDay() && d.getDate() != 1; }],
-		['%b %d', function(d) { return d.getDate() != 1; }],
+		// ['%a %d', function(d) { return d.getDay() && d.getDate() != 1; }],
+		['%b %e', function(d) { return d.getDate() != 1; }],
 		['%b', function(d) { return d.getMonth(); }],
 		['%Y', function() { return true; }]
 	]);
@@ -25,6 +25,7 @@ function spottedTail() {
 			chart_height,
 			chart_height_brush,
 			events_row_height,
+			event_circle_radius,
 			xValue,
 			yValue,
 			legend,
@@ -38,7 +39,7 @@ function spottedTail() {
 			xScaleBrush = d3.time.scale(),
 			yScales = {},
 			yScalesBrush = {},
-			xAxis = d3.svg.axis().scale(xScale).orient('bottom').tickSize(6, 0).tickFormat(customTimeFormat),
+			xAxis = d3.svg.axis().scale(xScale).orient('bottom').tickSize(6, 0).tickFormat(customTimeFormat).ticks(6),
 			yAxes = {},
 			y_domains = {},
 			xAxisBrush = d3.svg.axis().scale(xScaleBrush).orient('bottom'),
@@ -46,7 +47,11 @@ function spottedTail() {
 			linesBrush = {},
 			brush = d3.svg.brush().x(xScaleBrush),
 			bisectDate = d3.bisector(function(d) { return d.datetime; }).left,
-			ppNumber = function(str) { return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); },
+			ppNumber = function(str) { 
+				if (typeof str != 'string') str = str.toString();
+				return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
+			},
+			// ppNumber = function(str) { return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); },
 			ppDate = function(dObj) { return dObj.toDateString() };
 
 			yScales['a'] = d3.scale.linear();
@@ -86,6 +91,7 @@ function spottedTail() {
 			chart_height = chart_height*(dimensions.height - margin.top - margin.bottom);
 			chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
 			events_row_height = .28*chart_height;
+			event_circle_radius = 4.5;
 			data = parseDates(data);
 			// notes = parseDates(notes);
 			events = parseDates(events);
@@ -147,12 +153,20 @@ function spottedTail() {
 			// Append the svg element
 			var svg = d3.select(this).append('svg').attr('class', 'ST-canvas');
 
-			// Clipping path
+			// Clipping path for chart
 			svg.append('defs').append('clipPath')
-					.attr('id', 'ST-clip')
+					.attr('id', 'ST-clip-lines')
 				.append('rect')
 					.attr('width', chart_width + 1) // Add one so the lines dont' appear clipped
 					.attr('height', chart_height);
+
+			// Clipping path for event circles
+			svg.append('defs').append('clipPath')
+					.attr('id', 'ST-clip-circles')
+				.append('rect')
+					.attr('width', chart_width + 1) // Add one so the lines dont' appear clipped
+					.attr('height', chart_height)
+					.attr('transform', 'translate(-'+event_circle_radius+',0)')
 
 			// Lines
 			var lineChartCtnr = svg.append('g')
@@ -207,7 +221,7 @@ function spottedTail() {
 			lineChartCtnr.selectAll('.ST-metric-line[data-group="a"]')
 				.append('path')
 					.attr('class', 'ST-line')
-					.style('clip-path', 'url(#ST-clip)')
+					.style('clip-path', 'url(#ST-clip-lines)')
 					.attr('d', function(d) { return lines['a'](d.values); })
 					.style('stroke', function(d) { return legend[d.name].color || color(d.name); });
 
@@ -217,7 +231,6 @@ function spottedTail() {
 					.call(xAxis);
 
 			// Do it for b
-			console.log(metrics['b'])
 			lineChartCtnr.selectAll('.ST-metric-line[data-group="b"]')
 					.data(metrics['b'])
 				.enter().append('g')
@@ -227,10 +240,12 @@ function spottedTail() {
 			lineChartCtnr.selectAll('.ST-metric-line[data-group="b"]')
 				.append('path')
 					.attr('class', 'ST-line')
-					.style('clip-path', 'url(#ST-clip)')
+					.style('clip-path', 'url(#ST-clip-lines)')
 					.attr('d', function(d) { return lines['b'](d.values); })
 					.style('stroke', function(d) { return legend[d.name].color || color(d.name); });
 
+			// Dynamic interval calculation
+			// calcTimeInts()
 			// And its xAxis
 			lineChartCtnr.select('.ST-x.ST-axis')
 					.attr('transform', 'translate(0,' + yScales['b'].range()[0] + ')') // This can be either yScale because they have the same range
@@ -312,8 +327,8 @@ function spottedTail() {
 
 			eventItems.append('circle')
 				.classed('ST-event-circle', true)
-				.style('clip-path', 'url(#ST-clip)')
-				.attr('r', 4.5)
+				.style('clip-path', 'url(#ST-clip-circles)')
+				.attr('r', event_circle_radius)
 				.attr('transform', function(d) { return 'translate('+(margin.left)+',0)' })
 				.attr('cx', function(d){ return xScale(d.datetime) })
 				.attr('cy', events_row_height/2 );
@@ -342,7 +357,7 @@ function spottedTail() {
 			brushCtnr.selectAll('.ST-event-circle').data(events).enter()
 						.append('circle')
 						.classed('.ST-event-circle', true)
-						.attr('r', 4.5)
+						.attr('r', 3)
 						.attr('transform', function(d) { return 'translate(0,'+(yScalesBrush['a'].range()[0] - this.getBBox().height) +')' }) // Same as above, this can be either yScalesBrush
 						.attr('cx', function(d){ return xScale(d.datetime) });
 
@@ -446,6 +461,7 @@ function spottedTail() {
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="b"] .ST-line').attr('d', function(d){ return lines['b'](d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
 				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.datetime) });
+				// calcTimeInts();
 				// Report this out to the app.js
 				onBrush(xScale.domain())
 			}
@@ -468,6 +484,21 @@ function spottedTail() {
 
 		});
 	}
+
+	// function calcTimeInts(){
+	// 	var time_arr = xScale.domain().map(function(d) { return d.getTime() } ),
+	// 			steps = 5,
+	// 			time_interval = (time_arr[1] - time_arr[0]) / steps,
+	// 			ints = [];
+
+	// 	d3.range(steps).forEach(function(step){
+	// 		var how_many_intervals = time_interval*(step);
+	// 		ints.push( new Date(time_arr[0] + how_many_intervals) )
+	// 	})
+	// 	ints.push(new Date(time_arr[1]))
+
+	// 	xAxis.tickValues(ints);
+	// }
 
 	function isArray(testVar){
 		return Object.prototype.toString.call( testVar ) == '[object Array]';
