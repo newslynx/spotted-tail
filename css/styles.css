@@ -13,7 +13,7 @@
   stroke-width: 1.5px;
 }
 .ST-canvas .ST-axis,
-text {
+.ST-canvas text {
   cursor: default;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -25,10 +25,15 @@ text {
   -ms-user-select: none;
   user-select: none;
 }
+.ST-canvas text {
+  opacity: 0.75;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=75)";
+  filter: alpha(opacity=75);
+}
 .ST-canvas .ST-axis path,
 .ST-canvas .ST-axis line {
   fill: none;
-  stroke: #000;
+  stroke: #ccc;
   shape-rendering: crispEdges;
 }
 .ST-canvas .ST-brush .extent {
@@ -42,8 +47,11 @@ text {
   pointer-events: none;
 }
 .ST-canvas .ST-point circle {
-  fill: none;
-  stroke: #444;
+  fill: #000;
+}
+.ST-canvas .ST-point text {
+  font-size: 1.2em;
+  text-shadow: 0 0 6px #fff;
 }
 .ST-note line {
   stroke: #ccc;
@@ -63,4 +71,13 @@ text {
   position: absolute;
   right: 10px;
   bottom: 0;
+}
+.ST-y path.domain,
+.ST-brush path.domain,
+.ST-y .tick line,
+.ST-brush .tick line {
+  stroke: none;
+}
+.ST-x .tick line {
+  stroke: none;
 }
