@@ -18,27 +18,33 @@ function spottedTail() {
 	var dimensions = {},
 			margin = {},
 			marginBrush = {},
+			marginEvents = {},
+			events_width,
 			chart_width,
 			chart_width_brush,
 			chart_height,
 			chart_height_brush,
+			events_row_height,
 			xValue,
 			yValue,
 			legend,
-			notes,
+			// notes,
+			eventSchema,
+			events,
 			color = d3.scale.category10(),
 			xScale = d3.time.scale(),
 			xScaleBrush = d3.time.scale(),
 			yScale = d3.scale.linear(),
 			yScaleBrush = d3.scale.linear(),
 			xAxis = d3.svg.axis().scale(xScale).orient('bottom').tickSize(6, 0).tickFormat(customTimeFormat),
-			yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(4).tickFormat(d3.format('s')),
+			yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(3).tickFormat(d3.format('s')),
 			xAxisBrush = d3.svg.axis().scale(xScaleBrush).orient('bottom'),
 			line = d3.svg.line().x(X).y(Y),
 			lineBrush = d3.svg.line().x(XBrush).y(YBrush),
 			brush = d3.svg.brush().x(xScaleBrush),
 			bisectDate = d3.bisector(function(d) { return d.date; }).left,
 			ppDate = function(dObj) { return dObj.toDateString() };
+
 
 	function chart(selection_) {
 		selection = selection_;
@@ -50,15 +56,19 @@ function spottedTail() {
 
 			dimensions = {width: ctnr.offsetWidth, height: ctnr.offsetHeight};
 
-			margin = extend({top: 10, right: 0, bottom: (dimensions.height/3), left: 40}, margin);
-			marginBrush = extend({top: (dimensions.height * .8), right: (dimensions.width*.38), bottom: 20, left: 40}, marginBrush);
+			margin = extend({top: 10, right: 0, bottom: 0, left: 100}, margin);
+
+			marginEvents = extend({top: margin.top, top_buffer: 35, right: 0, bottom: 20, left: margin.left}, marginBrush); // topBuffer is for the bottom axis
+			marginBrush = extend({top: (dimensions.height * .9), right: 0, bottom: 0, left: margin.left}, marginBrush);
 			chart_width = dimensions.width - margin.left - margin.right;
 			chart_width_brush = dimensions.width - marginBrush.left - marginBrush.right;
-			chart_height = dimensions.height - margin.top - margin.bottom;
+			chart_height = .35;
+			chart_height = chart_height*(dimensions.height - margin.top - margin.bottom);
 			chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
-
+			events_row_height = .3*chart_height;
 			data = parseDates(data);
-			notes = parseDates(notes);
+			// notes = parseDates(notes);
+			events = parseDates(events);
 
 			// Set our value categories to everything except for things called date
 			color.domain(Object.keys(legend));
@@ -105,7 +115,8 @@ function spottedTail() {
 					.attr('id', 'ST-clip')
 				.append('rect')
 					.attr('width', chart_width)
-					.attr('height', chart_height);
+					.attr('height', dimensions.height);
+					console.log(dimensions.height)
 
 			// Lines
 			var lineChartCtnr = svg.append('g')
@@ -137,6 +148,13 @@ function spottedTail() {
 			brushCtnr.append('g').attr('class', 'ST-x ST-brusher').call(brush.on('brush', brushed)).selectAll('rect').attr('y', -6).attr('height', chart_height_brush + 7);
 			brushCtnr.append('g').attr('class', 'ST-x ST-axis');
 
+			// Events container
+			var eventsCntnr  = svg.append('g')
+														.classed('ST-events', true)
+														.classed('ST-container', true)
+														.attr('transform', 'translate(0,' + (chart_height + marginEvents.top + marginEvents.top_buffer) + ')');
+														// .attr('transform', 'translate(' + marginEvents.left + ',' + (chart_height + marginEvents.top + marginEvents.top_buffer) + ')');
+
 			// Update the outer dimensions to the full dimensions including the margins.
 			svg .attr('width', dimensions.width)
 					.attr('height', dimensions.height)
@@ -160,9 +178,26 @@ function spottedTail() {
 					.attr('transform', 'translate(0,' + yScale.range()[0] + ')')
 					.call(xAxis);
 
+			// Tuck the first one in by half its width
+			// You could also set `text-anchor` to `start` but that wasn't working
+			lineChartCtnr.select('.ST-x.ST-axis')
+					.selectAll('.tick text')
+						.attr('x', function(d,i){ return (i == 0) ? this.getBBox().width/2 : 0 });
+						// .attr('text-anchor', function(d,i){ return (i == 0) ? 'start' : 'middle'})
+
+			// Extend the line all the way to the left
+			lineChartCtnr.select('.ST-x.ST-axis')
+					.select('.domain')
+					.attr('d', 'M'+(-1*margin.left)+',0V0H'+(chart_width + margin.left)+'V0')
+
 			// And the y
 			lineChartCtnr.select('.ST-y.ST-axis')
 					.call(yAxis);
+
+			// Tuck zero up above the line
+			lineChartCtnr.select('.ST-y.ST-axis')
+					.selectAll('.tick text')
+						.attr('y', function(d,i){ return (i == 0) ? -1*this.getBBox().height/2 : 0 });
 
 			// And focal points
 			lineChartCtnr.selectAll('.ST-metric-line')
@@ -177,26 +212,68 @@ function spottedTail() {
 					.append('text')
 						.attr('dy', '.35em');
 
+			// Events container, let's use `_` suffix to mean the enter selection
+			var eventTimelineCntnr_ = eventsCntnr.selectAll('.ST-event-timeline')
+				.data(eventSchema).enter();
+
+			var eventTimelineCntnr = eventTimelineCntnr_.append('g')
+				.classed('ST-event-timeline', true)
+				.attr('transform', function(d, i) { return 'translate(0,' + (i*events_row_height) + ')' })
+			
+			eventTimelineCntnr.append('line')
+				.classed('ST-event-timeline-hr', true)
+				.attr('x1', 0)
+				.attr('x2', chart_width + margin.left)
+				.attr('transform', 'translate(0,' + 0 + ')');
+
+			eventTimelineCntnr.append('text')
+				.attr('text-anchor', 'end')
+				.classed('ST-event-timeline-name', true)
+				.html(function(d) { return d.name })
+				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ ( events_row_height/2 + this.getBBox().height/4 ) +')' }); // -10 to align with the axis numbers
+
+			// Add all the events to this row
+			var eventItems = eventTimelineCntnr.append('g')
+				.classed('ST-events', true)
+				.selectAll('.ST-timeline-event')
+				.data(function(d) { return events.filter(function(f){ return f.tags.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) }).enter();
+
+			eventItems.append('circle')
+				.classed('ST-event-circle', true)
+				.style('clip-path', 'url(#ST-clip)')
+				.attr('r', 4.5)
+				.attr('transform', function(d) { return 'translate('+(margin.left)+',0)' })
+				.attr('cx', function(d){ return xScale(d.date) })
+				.attr('cy', events_row_height/2 );
+
+
 			// Update the brush path
 			brushCtnr.selectAll('.ST-metric-line')
 					.data(metrics)
 				.enter().append('g')
 					.attr('class', 'ST-metric-line');
-					
+			
+			// Add the line series
 			brushCtnr.selectAll('.ST-metric-line')
 				.append('path')
 					.attr('class', 'ST-line')
 					.attr('d', function(d) { return lineBrush(d.values); })
-					.style('stroke', function(d) { return legend[d.name].color || color(d.name); });
+					.style('stroke', function(d) { return legend[d.name].color || color(d.name); })
+			
+			brushCtnr.selectAll('.ST-event-circle').data(events).enter()
+						.append('circle')
+						.classed('.ST-event-circle', true)
+						.attr('r', 4.5)
+						.attr('transform', function(d) { return 'translate(0,'+(yScaleBrush.range()[0] - this.getBBox().height) +')' })
+						.attr('cx', function(d){ return xScale(d.date) });
 
-			// And its xAxis
+			// And its xaxis
 			// brushCtnr.select('.ST-x.ST-axis')
 			// 		.attr('transform', 'translate(0,' + yScaleBrush.range()[0] + ')')
 			// 		.call(xAxisBrush);
 
-
 			// Note container
-			var noteCtnrLines		 = lineChartCtnr
+			/*var noteCtnrLines		 = lineChartCtnr
 														.append('g')
 														.classed('ST-notes', true)
 														.style('clip-path', 'url(#ST-clip)');
@@ -245,7 +322,7 @@ function spottedTail() {
 			noteBrush.append('line')
 				.attr('y1', 0)
 				.attr('y2', yScaleBrush.range()[0])
-				.attr('stroke-dasharray', '5,2')
+				.attr('stroke-dasharray', '5,2')*/
 
 			// noteLines.append('text')
 			// 	.text(function(d) { return d.text } )
@@ -270,9 +347,10 @@ function spottedTail() {
 			function brushed(d) {
 				xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
 				// TODO, wrap this up into an update function
-				noteCtnrLines.selectAll('.ST-note').attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
-				lineChartCtnr.selectAll('.ST-metric-line .ST-line').attr('d', function(d){return line(d.values) });
+				// noteCtnrLines.selectAll('.ST-note').attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
+				lineChartCtnr.selectAll('.ST-metric-line .ST-line').attr('d', function(d){ return line(d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
+				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.date) });
 			}
 
 			function mousemove(d) {
@@ -327,7 +405,7 @@ function spottedTail() {
 			type: ['note']
 		}
 
-		notes.push(new_note);
+		// notes.push(new_note);
 		chart.update();
 	}
 
@@ -388,17 +466,30 @@ function spottedTail() {
 		return chart;
 	};	
 
-	chart.notes = function(__){
-		if (!arguments.length) return notes;
-		notes = __;
-		return chart
+	// chart.notes = function(__){
+	// 	if (!arguments.length) return notes;
+	// 	notes = __;
+	// 	return chart
+	// }
+
+	// chart.addNote = function(__){
+	// 	if (!arguments.length) return notes;
+	// 	notes.push(__);
+	// 	return chart
+	// }
+
+	chart.events = function(__){
+		if (!arguments.length) return events;
+		events = __;
+		return chart;
 	}
 
-	chart.addNote = function(__){
-		if (!arguments.length) return notes;
-		notes.push(__);
-		return chart
+	chart.eventSchema = function(__){
+		if (!arguments.length) return eventSchema;
+		eventSchema = __;
+		return chart;
 	}
+
 
 	chart.update = function(__){
 		// TODO, instead of ditching redrawing the whole svg, trigger a d3 update and note redraw

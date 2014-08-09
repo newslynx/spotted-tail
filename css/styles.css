@@ -1,8 +1,7 @@
 #ST-chart {
   position: relative;
   width: 100%;
-  max-width: 500px;
-  height: 200px;
+  min-height: 200px;
 }
 .ST-canvas {
   font: 10px sans-serif;
@@ -69,8 +68,12 @@
 }
 .ST-note-btns {
   position: absolute;
-  right: 10px;
+  left: 0;
   bottom: 0;
+}
+.ST-note-btns button {
+  width: 100%;
+  display: block;
 }
 .ST-y path.domain,
 .ST-brush path.domain,
@@ -78,6 +81,22 @@
 .ST-brush .tick line {
   stroke: none;
 }
+.ST-x .tick text {
+  font-size: 1.1em;
+  -webkit-transform: translateY(5px);
+  -moz-transform: translateY(5px);
+  -o-transform: translateY(5px);
+  -ms-transform: translateY(5px);
+  transform: translateY(5px);
+}
 .ST-x .tick line {
   stroke: none;
+}
+.ST-event-timeline-hr {
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+.ST-event-timeline-name {
+  font-size: 1.3em;
+  font-weight: 200;
 }

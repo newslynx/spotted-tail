@@ -3,8 +3,7 @@
 #ST-chart
 	position relative
 	width 100%
-	max-width 500px
-	height 200px
+	min-height 200px
 
 .ST-canvas 
 	font 10px sans-serif
@@ -62,12 +61,27 @@
 
 .ST-note-btns
 	position absolute
-	right 10px
+	left 0
 	bottom 0
+	button
+		width 100%
+		display block
 
 .ST-y,.ST-brush
 	path.domain,.tick line
 		stroke none
 .ST-x
-	.tick line
-		stroke none
+	.tick
+		text
+			font-size 1.1em
+			transform translateY(5px)
+		line
+			stroke none
+
+.ST-event-timeline-hr
+	stroke #ccc
+	stroke-width 1px
+
+.ST-event-timeline-name
+	font-size 1.3em
+	font-weight 200
