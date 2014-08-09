@@ -50,12 +50,23 @@
 
 	var events = [
 		{
-			date: '2001-05-02',
+			date: '2002-01-02',
 			name: 'Jon Stewart talked about us',
 			tags: [
 				{
-					categories: ['citation'],
-					attributes: ['media']
+					category: 'citation',
+					attribute: 'media'
+				}
+			],
+			related_links: []
+		},
+		{
+			date: '2002-05-02',
+			name: 'Jon Stewart talked about us',
+			tags: [
+				{
+					category: 'change',
+					attribute: 'media'
 				}
 			],
 			related_links: []

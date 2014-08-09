@@ -196,7 +196,7 @@ function spottedTail() {
 			// Tuck zero up above the line
 			lineChartCtnr.select('.ST-y.ST-axis')
 					.selectAll('.tick text')
-						.attr('y', function(d,i){ console.log(d);return (i == 0) ? -1*this.getBBox().height/2 : 0 });
+						.attr('y', function(d,i){ return (i == 0) ? -1*this.getBBox().height/2 : 0 });
 
 			// And focal points
 			lineChartCtnr.selectAll('.ST-metric-line')
@@ -247,9 +247,19 @@ function spottedTail() {
 				.attr('text-anchor', 'end')
 				.classed('ST-event-timeline-name', true)
 				.html(function(d) { return d.name })
-				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ ( events_row_height/2 + this.getBBox().height/4 ) +')' }) // -10 to align with the axis numbers
+				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ ( events_row_height/2 + this.getBBox().height/4 ) +')' }); // -10 to align with the axis numbers
 
+			// Add all the events to this row
+			var eventItems = eventTimelineCntnr.append('g')
+				.classed('ST-events', true)
+				.selectAll('.ST-timeline-event')
+				.data(function(d) { return events.filter(function(f){ return f.tags.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) }).enter()
 
+			eventItems.append('circle')
+				.classed('ST-event-circle', true)
+				.attr('r', 4.5)
+				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ events_row_height/2 +')' }) // -10 to align with the axis numbers
+				.attr('cx', function(d){ return xScale(d.date) })
 
 			// Note container
 			/*var noteCtnrLines		 = lineChartCtnr
@@ -459,13 +469,13 @@ function spottedTail() {
 	chart.events = function(__){
 		if (!arguments.length) return events;
 		events = __;
-		return chart
+		return chart;
 	}
 
 	chart.eventSchema = function(__){
 		if (!arguments.length) return eventSchema;
 		eventSchema = __;
-		return chart
+		return chart;
 	}
 
 
