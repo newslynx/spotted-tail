@@ -32,20 +32,39 @@ function spottedTail() {
 			eventSchema,
 			events,
 			onBrush,
+			number_of_legend_ticks = 3,
 			color = d3.scale.category10(),
 			xScale = d3.time.scale(),
 			xScaleBrush = d3.time.scale(),
-			yScale = d3.scale.linear(),
-			yScaleBrush = d3.scale.linear(),
+			yScales = {},
+			yScalesBrush = {},
 			xAxis = d3.svg.axis().scale(xScale).orient('bottom').tickSize(6, 0).tickFormat(customTimeFormat),
-			yAxis = d3.svg.axis().scale(yScale).orient('left').ticks(3).tickFormat(d3.format('s')),
+			yAxes = {},
+			y_domains = {},
 			xAxisBrush = d3.svg.axis().scale(xScaleBrush).orient('bottom'),
-			line = d3.svg.line().x(X).y(Y),
-			lineBrush = d3.svg.line().x(XBrush).y(YBrush),
+			lines = {},
+			linesBrush = {},
 			brush = d3.svg.brush().x(xScaleBrush),
 			bisectDate = d3.bisector(function(d) { return d.date; }).left,
 			ppDate = function(dObj) { return dObj.toDateString() };
 
+			yScales['a'] = d3.scale.linear();
+			yScalesBrush['a'] = d3.scale.linear();
+			yScales['b'] = d3.scale.linear();
+			yScalesBrush['b'] = d3.scale.linear();
+
+			yAxes['a'] = d3.svg.axis().scale(yScales['a']).orient('left').ticks(number_of_legend_ticks).tickFormat(d3.format('s'));
+			yAxes['b'] = d3.svg.axis().scale(yScales['b']).orient('right').ticks(number_of_legend_ticks).tickFormat(function(d, i){
+				var suffix = (i == number_of_legend_ticks - 1) ? ' Pvs' : '',
+						val = d3.format('s')(d);
+				return val + suffix;
+			});
+
+			lines['a'] = d3.svg.line().x(X).y(Ya);
+			lines['b'] = d3.svg.line().x(X).y(Yb);
+
+			linesBrush['a'] = d3.svg.line().x(XBrush).y(YBrushA);
+			linesBrush['b'] = d3.svg.line().x(XBrush).y(YBrushB);
 
 	function chart(selection_) {
 		selection = selection_;
@@ -57,15 +76,15 @@ function spottedTail() {
 
 			dimensions = {width: ctnr.offsetWidth, height: ctnr.offsetHeight};
 
-			margin = extend({top: 10, right: 0, bottom: 0, left: 100}, margin);
-			marginEvents = extend({top: margin.top, top_buffer: 35, right: 0, bottom: 20, left: margin.left}, marginEvents); // topBuffer is for the bottom axis
-			marginBrush = extend({top: (dimensions.height * .9), right: 0, bottom: 0, left: margin.left}, marginBrush);
+			margin = extend({top: 10, right: 48, bottom: 0, left: 100}, margin);
+			marginEvents = extend({top: margin.top, top_buffer: 35, right: margin.right, bottom: 20, left: margin.left}, marginEvents); // topBuffer is for the bottom axis
+			marginBrush = extend({top: (dimensions.height * .9), right: margin.right, bottom: 0, left: margin.left}, marginBrush);
 			chart_width = dimensions.width - margin.left - margin.right;
 			chart_width_brush = dimensions.width - marginBrush.left - marginBrush.right;
 			chart_height = .38;
 			chart_height = chart_height*(dimensions.height - margin.top - margin.bottom);
 			chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
-			events_row_height = .3*chart_height;
+			events_row_height = .28*chart_height;
 			data = parseDates(data);
 			// notes = parseDates(notes);
 			events = parseDates(events);
@@ -76,16 +95,25 @@ function spottedTail() {
 			var metrics = color.domain().map(function(name) {
 					return { 
 						name: name,
+						group: legend[name].group,
 						values: data.map(function(d) {
 							return {date: d.date, count: +d[name]};
 						})
 					}
 			});
 
-			var x_domain = d3.extent(data, function(d) { return d.date; }),
-					y_domain = [0, 
-						d3.max(metrics, function(c) { return d3.max(c.values, function(v) { return v.count; }); })
-					];
+			// Nest by group
+			metrics = d3.nest()
+				.key(function(d){ return d.group })
+				.map(metrics);
+
+			var x_domain = d3.extent(data, function(d) { return d.date; });
+			y_domains['a'] = [0, 
+				d3.max(metrics['a'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
+			];
+			y_domains['b'] = [0, 
+				d3.max(metrics['b'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
+			];
 
 			// Update the x-scale.
 			xScale
@@ -93,19 +121,27 @@ function spottedTail() {
 					.range([0, chart_width]);
 
 			// Update the y-scale.
-			yScale
-					.domain(y_domain)
+			yScales['a']
+					.domain(y_domains['a'])
 					.range([chart_height, 0]);
+
+			yScales['b']
+					.domain(y_domains['b'])
+					.range([chart_height, 0]);
+
+			// Update the y-scale.
+			yScalesBrush['a']
+					.domain(y_domains['a'])
+					.range([chart_height_brush, 0]);
+
+			yScalesBrush['b']
+					.domain(y_domains['b'])
+					.range([chart_height_brush, 0]);
 
 			// Update the x-scale.
 			xScaleBrush
 					.domain(x_domain)
 					.range([0, chart_width_brush]);
-
-			// Update the y-scale.
-			yScaleBrush
-					.domain(y_domain)
-					.range([chart_height_brush, 0]);
 
 			// Append the svg element
 			var svg = d3.select(this).append('svg').attr('class', 'ST-canvas');
@@ -114,7 +150,7 @@ function spottedTail() {
 			svg.append('defs').append('clipPath')
 					.attr('id', 'ST-clip')
 				.append('rect')
-					.attr('width', chart_width)
+					.attr('width', chart_width + 1) // Add one so the lines dont' appear clipped
 					.attr('height', chart_height);
 
 			// Lines
@@ -133,7 +169,8 @@ function spottedTail() {
 					.on('mousemove', mousemove)
 
 			// line with clipping path, axes
-			lineChartCtnr.append('g').attr('class', 'ST-y ST-axis');
+			lineChartCtnr.append('g').attr('class', 'ST-y ST-axis').attr('data-group','a');
+			lineChartCtnr.append('g').attr('class', 'ST-y ST-axis').attr('data-group','b');
 			lineChartCtnr.append('g').attr('class', 'ST-x ST-axis');
 
 			// Brush container
@@ -160,21 +197,42 @@ function spottedTail() {
 
 
 			// Update the line path.
-			lineChartCtnr.selectAll('.ST-metric-line')
-					.data(metrics)
+			lineChartCtnr.selectAll('.ST-metric-line[data-group="a"]')
+					.data(metrics['a'])
 				.enter().append('g')
 					.attr('class', 'ST-metric-line')
+					.attr('data-group', 'a')
 
-			lineChartCtnr.selectAll('.ST-metric-line')
+			lineChartCtnr.selectAll('.ST-metric-line[data-group="a"]')
 				.append('path')
 					.attr('class', 'ST-line')
 					.style('clip-path', 'url(#ST-clip)')
-					.attr('d', function(d) { return line(d.values); })
+					.attr('d', function(d) { return lines['a'](d.values); })
 					.style('stroke', function(d) { return legend[d.name].color || color(d.name); });
 
 			// And its xAxis
 			lineChartCtnr.select('.ST-x.ST-axis')
-					.attr('transform', 'translate(0,' + yScale.range()[0] + ')')
+					.attr('transform', 'translate(0,' + yScales['a'].range()[0] + ')') // This can be either yScale because they have the same range
+					.call(xAxis);
+
+			// Do it for b
+			console.log(metrics['b'])
+			lineChartCtnr.selectAll('.ST-metric-line[data-group="b"]')
+					.data(metrics['b'])
+				.enter().append('g')
+					.attr('class', 'ST-metric-line')
+					.attr('data-group', 'b')
+
+			lineChartCtnr.selectAll('.ST-metric-line[data-group="b"]')
+				.append('path')
+					.attr('class', 'ST-line')
+					.style('clip-path', 'url(#ST-clip)')
+					.attr('d', function(d) { return lines['b'](d.values); })
+					.style('stroke', function(d) { return legend[d.name].color || color(d.name); });
+
+			// And its xAxis
+			lineChartCtnr.select('.ST-x.ST-axis')
+					.attr('transform', 'translate(0,' + yScales['b'].range()[0] + ')') // This can be either yScale because they have the same range
 					.call(xAxis);
 
 			// Tuck the first one in by half its width
@@ -184,17 +242,32 @@ function spottedTail() {
 						.attr('x', function(d,i){ return (i == 0) ? this.getBBox().width/2 : 0 });
 						// .attr('text-anchor', function(d,i){ return (i == 0) ? 'start' : 'middle'})
 
-			// Extend the line all the way to the left
+			// Extend the line all the way to the left and right
 			lineChartCtnr.select('.ST-x.ST-axis')
-					.select('.domain')
-					.attr('d', 'M'+(-1*margin.left)+',0V0H'+(chart_width + margin.left)+'V0')
+					.append('line')
+					.classed('ST-category-timeline-hr', true)
+					.attr('x1', 0)
+					.attr('x2', chart_width + margin.left + margin.right)
+					.attr('transform',' translate('+-1*margin.left+',0)');
 
 			// And the y
-			lineChartCtnr.select('.ST-y.ST-axis')
-					.call(yAxis);
+			lineChartCtnr.selectAll('.ST-y.ST-axis[data-group="a"]')
+					.call(yAxes['a']);
+
+			// And the y
+			lineChartCtnr.selectAll('.ST-y.ST-axis[data-group="b"]')
+					.attr('transform', 'translate('+chart_width+',0)')
+					.call(yAxes['b']);
+
+			// lineChartCtnr.selectAll('.ST-y.ST-axis')
+			// 		.call(yAxes['b']);
 
 			// Tuck zero up above the line
-			lineChartCtnr.select('.ST-y.ST-axis')
+			lineChartCtnr.select('.ST-y.ST-axis[data-group="a"]')
+					.selectAll('.tick text')
+						.attr('y', function(d,i){ return (i == 0) ? -1*this.getBBox().height/2 : 0 });
+
+			lineChartCtnr.select('.ST-y.ST-axis[data-group="b"]')
 					.selectAll('.tick text')
 						.attr('y', function(d,i){ return (i == 0) ? -1*this.getBBox().height/2 : 0 });
 
@@ -222,7 +295,7 @@ function spottedTail() {
 			eventTimelineCntnr.append('line')
 				.classed('ST-category-timeline-hr', true)
 				.attr('x1', 0)
-				.attr('x2', chart_width + margin.left);
+				.attr('x2', chart_width + margin.left + margin.right);
 
 			eventTimelineCntnr.append('text')
 				.attr('text-anchor', 'end')
@@ -248,28 +321,44 @@ function spottedTail() {
 			eventsCntnr.append('line')
 				.classed('ST-category-timeline-hr', true)
 				.attr('x1', 0)
-				.attr('x2', chart_width + margin.left)
+				.attr('x2', chart_width + margin.left + margin.right)
 				.attr('transform', 'translate(0,' + (eventsCntnr.node().getBBox().height + events_row_height/3) + ')');
 
 			// Update the brush path
-			brushCtnr.selectAll('.ST-metric-line')
-					.data(metrics)
+			brushCtnr.selectAll('.ST-metric-line[data-group="a"]')
+					.data(metrics['a'])
 				.enter().append('g')
-					.attr('class', 'ST-metric-line');
+					.attr('class', 'ST-metric-line')
+					.attr('data-group', 'a');
 			
 			// Add the line series
-			brushCtnr.selectAll('.ST-metric-line')
+			brushCtnr.selectAll('.ST-metric-line[data-group="a"]')
 				.append('path')
 					.attr('class', 'ST-line')
-					.attr('d', function(d) { return lineBrush(d.values); })
+					.attr('d', function(d) { return linesBrush['a'](d.values); })
 					.style('stroke', function(d) { return legend[d.name].color || color(d.name); })
 			
 			brushCtnr.selectAll('.ST-event-circle').data(events).enter()
 						.append('circle')
 						.classed('.ST-event-circle', true)
 						.attr('r', 4.5)
-						.attr('transform', function(d) { return 'translate(0,'+(yScaleBrush.range()[0] - this.getBBox().height) +')' })
+						.attr('transform', function(d) { return 'translate(0,'+(yScalesBrush['a'].range()[0] - this.getBBox().height) +')' }) // Same as above, this can be either yScalesBrush
 						.attr('cx', function(d){ return xScale(d.date) });
+
+			// Update the brush path with b group
+			brushCtnr.selectAll('.ST-metric-line[data-group="b"]')
+					.data(metrics['b'])
+				.enter().append('g')
+					.attr('class', 'ST-metric-line')
+					.attr('data-group', 'b');
+
+			// Add the line series
+			brushCtnr.selectAll('.ST-metric-line[data-group="b"]')
+				.append('path')
+					.attr('class', 'ST-line')
+					.attr('d', function(d) { return linesBrush['b'](d.values); })
+					.style('stroke', function(d) { return legend[d.name].color || color(d.name); })
+			
 
 			// And its xaxis
 			// brushCtnr.select('.ST-x.ST-axis')
@@ -352,7 +441,8 @@ function spottedTail() {
 				xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
 				// TODO, wrap this up into an update function
 				// noteCtnrLines.selectAll('.ST-note').attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
-				lineChartCtnr.selectAll('.ST-metric-line .ST-line').attr('d', function(d){ return line(d.values) });
+				lineChartCtnr.selectAll('.ST-metric-line[data-group="a"] .ST-line').attr('d', function(d){ return lines['a'](d.values) });
+				lineChartCtnr.selectAll('.ST-metric-line[data-group="b"] .ST-line').attr('d', function(d){ return lines['b'](d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
 				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.date) });
 				// Report this out to the app.js
@@ -418,8 +508,12 @@ function spottedTail() {
 	}
 
 	// The x-accessor for the path generator; yScale ∘ yValue.
-	function Y(d) {
-		return yScale(yValue(d));
+	function Ya(d) {
+		return yScales['a'](yValue(d));
+	}
+
+	function Yb(d) {
+		return yScales['b'](yValue(d));
 	}
 
 	// The x-accessor for the brush path generator; xScale ∘ xValue.
@@ -428,8 +522,12 @@ function spottedTail() {
 	}
 
 	// The x-accessor for the brush path generator; yScale ∘ yValue.
-	function YBrush(d) {
-		return yScaleBrush(yValue(d));
+	function YBrushA(d) {
+		return yScalesBrush['a'](yValue(d));
+	}
+
+	function YBrushB(d) {
+		return yScalesBrush['b'](yValue(d));
 	}
 
 	function extend(defaults, opts){
