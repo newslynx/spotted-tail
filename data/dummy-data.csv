@@ -1,4 +1,4 @@
-date,twitter,facebook,pageviews
+datetime,twitter,facebook,pageviews
 2000-01-01,0,0,0
 2000-02-01,761,2823,5452
 2000-03-01,757,2196,1130

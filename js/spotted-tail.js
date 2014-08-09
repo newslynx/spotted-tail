@@ -45,7 +45,7 @@ function spottedTail() {
 			lines = {},
 			linesBrush = {},
 			brush = d3.svg.brush().x(xScaleBrush),
-			bisectDate = d3.bisector(function(d) { return d.date; }).left,
+			bisectDate = d3.bisector(function(d) { return d.datetime; }).left,
 			ppNumber = function(str) { return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); },
 			ppDate = function(dObj) { return dObj.toDateString() };
 
@@ -98,7 +98,7 @@ function spottedTail() {
 						name: name,
 						group: legend[name].group,
 						values: data.map(function(d) {
-							return {date: d.date, count: +d[name]};
+							return {datetime: d.datetime, count: +d[name]};
 						})
 					}
 			});
@@ -108,7 +108,7 @@ function spottedTail() {
 				.key(function(d){ return d.group })
 				.map(metrics);
 
-			var x_domain = d3.extent(data, function(d) { return d.date; });
+			var x_domain = d3.extent(data, function(d) { return d.datetime; });
 			y_domains['a'] = [0, 
 				d3.max(metrics['a'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
 			];
@@ -315,7 +315,7 @@ function spottedTail() {
 				.style('clip-path', 'url(#ST-clip)')
 				.attr('r', 4.5)
 				.attr('transform', function(d) { return 'translate('+(margin.left)+',0)' })
-				.attr('cx', function(d){ return xScale(d.date) })
+				.attr('cx', function(d){ return xScale(d.datetime) })
 				.attr('cy', events_row_height/2 );
 
 			// Add a bottom rule
@@ -344,7 +344,7 @@ function spottedTail() {
 						.classed('.ST-event-circle', true)
 						.attr('r', 4.5)
 						.attr('transform', function(d) { return 'translate(0,'+(yScalesBrush['a'].range()[0] - this.getBBox().height) +')' }) // Same as above, this can be either yScalesBrush
-						.attr('cx', function(d){ return xScale(d.date) });
+						.attr('cx', function(d){ return xScale(d.datetime) });
 
 			// Update the brush path with b group
 			brushCtnr.selectAll('.ST-metric-line[data-group="b"]')
@@ -445,7 +445,7 @@ function spottedTail() {
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="a"] .ST-line').attr('d', function(d){ return lines['a'](d.values) });
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="b"] .ST-line').attr('d', function(d){ return lines['b'](d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
-				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.date) });
+				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.datetime) });
 				// Report this out to the app.js
 				onBrush(xScale.domain())
 			}
@@ -458,7 +458,7 @@ function spottedTail() {
 						i = bisectDate(data, x0, 1),
 						d0 = data[i - 1],
 						d1 = data[i];
-				var d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+				var d = x0 - d0.datetime > d1.datetime - x0 ? d1 : d0;
 				var point = d3.selectAll('.ST-point');
 				point.attr('transform', function(dd) { return 'translate(' + X(d) + ',' + yScales[dd.group](d[dd.name]) + ')' });
 				point.select('text')
@@ -475,7 +475,7 @@ function spottedTail() {
 
 	function parseDates(arr){
 		arr.forEach(function(d, i) {
-			if (typeof d.date == 'string') d.date = xValue(d);
+			if (typeof d.datetime == 'string') d.datetime = xValue(d);
 		});
 		return arr
 	}
@@ -505,7 +505,7 @@ function spottedTail() {
 
 	// The x-accessor for the path generator; xScale ∘ xValue.
 	function X(d) {
-		return xScale(d.date);
+		return xScale(d.datetime);
 	}
 
 	// The x-accessor for the path generator; yScale ∘ yValue.
@@ -519,7 +519,7 @@ function spottedTail() {
 
 	// The x-accessor for the brush path generator; xScale ∘ xValue.
 	function XBrush(d) {
-		return xScaleBrush(d.date);
+		return xScaleBrush(d.datetime);
 	}
 
 	// The x-accessor for the brush path generator; yScale ∘ yValue.

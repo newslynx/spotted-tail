@@ -8,7 +8,7 @@
 	}
 	var notes = [
 		{
-			date: '2001-09-01',
+			datetime: '2001-09-01',
 			text: 'A sample note',
 			type: ['note']
 		}
@@ -50,7 +50,7 @@
 
 	var events = [
 		{
-			date: '2000-04-01',
+			datetime: '2000-04-01',
 			name: 'Jon Stewart talked about us',
 			tags: [
 				{
@@ -61,7 +61,7 @@
 			related_links: []
 		},
 		{
-			date: '2002-06-02',
+			datetime: '2002-06-02',
 			name: 'Jon Stewart talked about us',
 			tags: [
 				{
@@ -74,7 +74,7 @@
 	]
 				
 	var stChart = spottedTail()
-			.x(function(d) { return formatDate.parse(d.date); })
+			.x(function(d) { return formatDate.parse(d.datetime); })
 			.y(function(d) { return +d.count; })
 			.legend(legend)
 			.eventSchema(eventSchema)
