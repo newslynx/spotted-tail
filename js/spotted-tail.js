@@ -477,7 +477,7 @@ function spottedTail() {
 				var point = d3.selectAll('.ST-point');
 				point.attr('transform', function(dd) { return 'translate(' + X(d) + ',' + yScales[dd.group](d[dd.name]) + ')' });
 				point.select('text')
-					.text(function(dd) { return ppNumber(d[dd.name]) + ' ' + (legend[dd.name].metric || dd.name) })
+					.text(function(dd) { return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
 					.attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_buffer*2) ? mouse_buffer : (-mouse_buffer - this.getBBox().width) });
 			}
 

@@ -2,9 +2,9 @@
 
 	var formatDate = d3.time.format('%Y-%m-%d');
 	var legend =	{
-		facebook: {metric: 'likes', color: '#3B5998', group: 'a'},
-		twitter: {metric: 'mentions', color: '#55ACEE', group: 'a'},
-		pageviews: {metric: 'pageviews', color: '#fc0', group: 'b'}
+		facebook: {service: 'Facebook', metric: 'likes', color: '#3B5998', group: 'a'},
+		twitter: {service: 'Twitter', metric: 'mentions', color: '#55ACEE', group: 'a'},
+		pageviews: {service: '', metric: 'pageviews', color: '#fc0', group: 'b'}
 	}
 	var notes = [
 		{
