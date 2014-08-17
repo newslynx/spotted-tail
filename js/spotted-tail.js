@@ -103,6 +103,7 @@ function spottedTail() {
 					return { 
 						name: name,
 						group: legend[name].group,
+						display_name: legend[name].service,
 						values: data.map(function(d) {
 							return {datetime: d.datetime, count: +d[name]};
 						})
@@ -287,15 +288,24 @@ function spottedTail() {
 						.attr('y', function(d,i){ return (i == 0) ? -1*this.getBBox().height/2 : 0 });
 
 			// And focal points
-			lineChartCtnr.selectAll('.ST-metric-line')
+			// These are drawn last so they always appear on top of everything
+			var focus_containers = lineChartCtnr.append('g')
+				.attr('class', 'ST-focus-points')
+				.selectAll('.ST-focus-point')
+				.data( metrics['a'].concat(metrics['b']) )
+					.enter();
+
+			var focus_container = focus_containers
 					.append('g')
 						.attr('class', 'ST-point')
-						.style('display', 'none')
-					.append('circle')
+						.style('display', 'none');
+
+			// Add the circle
+			focus_container.append('circle')
 						.attr('r', 3);
 
 			// And text components
-			lineChartCtnr.selectAll('.ST-point')
+			focus_container
 					.append('text')
 						.attr('dy', '.35em');
 
@@ -322,7 +332,7 @@ function spottedTail() {
 			var eventItems = eventTimelineCntnr.append('g')
 				.classed('ST-events', true)
 				.selectAll('.ST-timeline-event')
-				.data(function(d) { return events.filter(function(f){ return f.tags.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) }).enter();
+				.data(function(d) { return events.filter(function(f){ console.log(f);return f.impact_tags.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) }).enter();
 
 			eventItems.append('circle')
 				.classed('ST-event-circle', true)
@@ -478,7 +488,8 @@ function spottedTail() {
 				point.attr('transform', function(dd) { return 'translate(' + X(d) + ',' + yScales[dd.group](d[dd.name]) + ')' });
 				point.select('text')
 					.text(function(dd) { return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
-					.attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_buffer*2) ? mouse_buffer : (-mouse_buffer - this.getBBox().width) });
+					.attr('x', function(dd){ return (-mouse_buffer - this.getBBox().width) });
+					// .attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_buffer*2) ? mouse_buffer : (-mouse_buffer - this.getBBox().width) });
 			}
 
 		});
