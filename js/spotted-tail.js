@@ -592,28 +592,28 @@ function spottedTail() {
 		return arr
 	}
 
-	function addButtons(container){
-		var noteBtns = d3.select(container).append('div')
-			.classed('ST-note-btns', true).selectAll('buttons')
-			.data(['note','event']);
+	// function addButtons(container){
+	// 	var noteBtns = d3.select(container).append('div')
+	// 		.classed('ST-note-btns', true).selectAll('buttons')
+	// 		.data(['note','event']);
 
-		noteBtns.enter()
-			.append('button')
-			.html(function(d) { return '+ ' + d })
-			.on('click', function(d) { handleBtnClick(d.name) })
-	}
+	// 	noteBtns.enter()
+	// 		.append('button')
+	// 		.html(function(d) { return '+ ' + d })
+	// 		.on('click', function(d) { handleBtnClick(d.name) })
+	// }
 
-	function handleBtnClick(type){
-		// Show different modal templates based on the button click
-		var new_note = 		{
-			date: 'Sep 2001',
-			text: 'An added note',
-			type: ['note']
-		}
+	// function handleBtnClick(type){
+	// 	// Show different modal templates based on the button click
+	// 	var new_note = 		{
+	// 		date: 'Sep 2001',
+	// 		text: 'An added note',
+	// 		type: ['note']
+	// 	}
 
-		// notes.push(new_note);
-		chart.update();
-	}
+	// 	// notes.push(new_note);
+	// 	chart.update();
+	// }
 
 	// The x-accessor for the path generator; xScale ∘ xValue.
 	function X(d) {
