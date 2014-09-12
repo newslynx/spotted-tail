@@ -43,7 +43,7 @@
 
 	var events = [
 		{
-			timestamp: 949363200,
+			timestamp: 962409600,
 			name: 'Jon Stewart talked about us',
 			impact_tags_full: [
 				{
@@ -54,7 +54,7 @@
 			related_links: []
 		},
 		{
-			timestamp: 959817600,
+			timestamp: 975628800,
 			name: 'Jon Stewart talked about us',
 			impact_tags_full: [
 				{
@@ -67,7 +67,7 @@
 	]
 				
 	var stChart = spottedTail()
-			.x(function(d) { 
+			.x(function(d) {
 				var utc_date = new Date(d.timestamp*1000),
 						user_timezone_date = new Date(new Date(utc_date).setHours(utc_date.getHours() + timezone_offset ));
 				return user_timezone_date;
@@ -84,6 +84,10 @@
 	d3.csv('data/dummy-data.csv', drawChart);
 
 	function drawChart(data_){
+		// Convert our timestamps to numbers
+		data_.forEach(function(row){
+			row.timestamp = +row.timestamp
+		})
 		d3.select('#ST-chart')
 			.datum(data_)
 		.call(stChart)
