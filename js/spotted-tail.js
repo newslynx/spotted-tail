@@ -81,7 +81,7 @@ function spottedTail() {
 
 			linesBrush['a'] = d3.svg.line().interpolate(interpolate).x(XBrush).y(YBrushA);
 			linesBrush['b'] = d3.svg.line().interpolate(interpolate).x(XBrush).y(YBrushB);
-			
+
 			// Define the width based on the dimensions of the input container
 			var ctnr = document.getElementById(selection[idx][0].id);
 
@@ -456,83 +456,6 @@ function spottedTail() {
 								.style('fill', function(d) { return d.color } )
 								.style('opacity', .5);
 
-			// And its xaxis
-			// brushCtnr.select('.ST-x.ST-axis')
-			// 		.attr('transform', 'translate(0,' + yScaleBrush.range()[0] + ')')
-			// 		.call(xAxisBrush);
-
-			// Note container
-			/*var noteCtnrLines		 = lineChartCtnr
-														.append('g')
-														.classed('ST-notes', true)
-														.style('clip-path', 'url(#ST-clip)');
-
-			var noteLines = noteCtnrLines.selectAll('.ST-note')
-					.data(notes)
-				.enter().append('g')
-					.attr('class', 'ST-note')
-					.attr('data-note-type', function(d) { return d.type.join('|') })
-					.attr('transform', function(d){ return 'translate(' + X(d) + ',0)'  })
-
-			noteLines.append('line')
-				.attr('y1', 0)
-				.attr('y2', chart_height)
-				.attr('stroke-dasharray', '5,2')
-
-			noteLines.append('text')
-				.text(function(d) { return d.text } )
-				.attr('dx', '.32em')
-				.attr('dy', '.8em')
-				.style('text-anchor', 'start')
-				.style('display', 'none')
-
-			noteLines.append('rect')
-				.attr('width', 10)
-				.attr('height', chart_height)
-				.attr('data-id', function(d) { return d.id } )
-				.attr('transform', 'translate(-5,0)') // Make this half the width so it's centered within the line
-				.on('mouseover', function(d){ noteTooltip(this, true) })
-				.on('mouseout', function(d){ noteTooltip(this, false) })
-				.on('click', function() {console.log('do something')}); // TODO
-
-
-			// Note container for brusher
-			var noteCtnrBrush		 = brushCtnr
-														.append('g')
-														.classed('ST-notes', true);
-
-			var noteBrush = noteCtnrBrush.selectAll('.ST-note')
-					.data(notes)
-				.enter().append('g')
-					.attr('class', 'ST-note')
-					.attr('data-note-type', function(d) { return d.type })
-					.attr('transform', function(d){ return 'translate(' + XBrush(d) + ',0)'  })
-
-			noteBrush.append('line')
-				.attr('y1', 0)
-				.attr('y2', yScaleBrush.range()[0])
-				.attr('stroke-dasharray', '5,2')*/
-
-			// noteLines.append('text')
-			// 	.text(function(d) { return d.text } )
-			// 	.attr('dx', '.32em')
-			// 	.attr('dy', '.8em')
-			// 	.style('text-anchor', 'start')
-			// 	.style('display', 'none')
-
-			// noteLines.append('rect')
-			// 	.attr('width', 10)
-			// 	.attr('height', yScaleBrush.range()[0])
-			// 	.attr('data-id', function(d) { return d.id } )
-			// 	.attr('transform', 'translate(-5,0)') // Make this half the width so it's centered within the line
-			// 	.on('mouseover', function(d){ noteTooltip(this, true) })
-			// 	.on('mouseout', function(d){ noteTooltip(this, false) })
-			// 	.on('click', function() {console.log('do something')}); // TODO
-
-			function noteTooltip(el, isActive){
-				d3.select(el.parentNode).classed('ST-active', isActive);
-			}
-
 			function brushed(d) {
 				xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
 				// TODO, wrap this up into an update function
@@ -548,7 +471,8 @@ function spottedTail() {
 
 			function mousemove(d) {
 				var that = this;
-				var mouse_buffer = 9;
+				var point_radius = 3,
+						mouse_x_buffer = -point_radius;
 				var m = d3.mouse(that)[0],
 						x0 = xScale.invert(m),
 						i = bisectDate(data, x0, 1),
@@ -559,8 +483,9 @@ function spottedTail() {
 				point.attr('transform', function(dd) { return 'translate(' + X(d) + ',' + yScales[dd.group](d[dd.name]) + ')' });
 				point.select('text')
 					.text(function(dd) {return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
-					.attr('x', function(dd){ return (-mouse_buffer - this.getBBox().width) });
-					// .attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_buffer*2) ? mouse_buffer : (-mouse_buffer - this.getBBox().width) });
+					.attr('x', function(dd){ return (-mouse_x_buffer - this.getBBox().width) })
+					.attr('y', -point_radius*3.3);
+					// .attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_x_buffer*2) ? mouse_x_buffer : (-mouse_x_buffer - this.getBBox().width) });
 			}
 
 		});
@@ -591,29 +516,6 @@ function spottedTail() {
 		});
 		return arr
 	}
-
-	// function addButtons(container){
-	// 	var noteBtns = d3.select(container).append('div')
-	// 		.classed('ST-note-btns', true).selectAll('buttons')
-	// 		.data(['note','event']);
-
-	// 	noteBtns.enter()
-	// 		.append('button')
-	// 		.html(function(d) { return '+ ' + d })
-	// 		.on('click', function(d) { handleBtnClick(d.name) })
-	// }
-
-	// function handleBtnClick(type){
-	// 	// Show different modal templates based on the button click
-	// 	var new_note = 		{
-	// 		date: 'Sep 2001',
-	// 		text: 'An added note',
-	// 		type: ['note']
-	// 	}
-
-	// 	// notes.push(new_note);
-	// 	chart.update();
-	// }
 
 	// The x-accessor for the path generator; xScale ∘ xValue.
 	function X(d) {
@@ -679,18 +581,6 @@ function spottedTail() {
 		legend = __;
 		return chart;
 	};	
-
-	// chart.notes = function(__){
-	// 	if (!arguments.length) return notes;
-	// 	notes = __;
-	// 	return chart
-	// }
-
-	// chart.addNote = function(__){
-	// 	if (!arguments.length) return notes;
-	// 	notes.push(__);
-	// 	return chart
-	// }
 
 	chart.events = function(__){
 		if (!arguments.length) return events;
