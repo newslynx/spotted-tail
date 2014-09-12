@@ -372,7 +372,7 @@ function spottedTail() {
 				.attr('text-anchor', 'end')
 				.classed('ST-category-timeline-name', true)
 				.html(function(d) { return d.name })
-				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ ( events_row_height/2 + this.getBBox().height/3 ) +')' }); // -10 to align with the axis numbers
+				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ ( this.getBBox().height + 5 ) +')' }); // -10 to align with the axis numbers, 5 to give the text some padding
 
 			// Add all the events to this row
 			var eventItems = eventTimelineCntnr.append('g')
@@ -401,8 +401,9 @@ function spottedTail() {
 				.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
 				.attr('cy', function(d,i) { 
 					// TODO, figure out how to stack more than three
-					var y_offset = i*10;
-					return events_row_height/2 + y_offset
+					// The 14 aligns it with the row caption
+					var y_offset = i*10 + 14;
+					return y_offset
 				})
 				.on('mouseover', function(d){ console.log(d) })
 
