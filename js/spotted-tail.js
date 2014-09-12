@@ -46,8 +46,9 @@ function spottedTail() {
 			lines = {},
 			linesBrush = {},
 			brush = d3.svg.brush().x(xScaleBrush),
-			bisectDate = d3.bisector(function(d) { return d.datetime; }).left,
+			bisectDate = d3.bisector(function(d) { return d.timestamp; }).left,
 			ppNumber = function(str) { 
+				// console.log(str)
 				if (typeof str != 'string') str = str.toString();
 				return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
 			},
@@ -66,11 +67,11 @@ function spottedTail() {
 				return val + suffix;
 			});
 
-			lines['a'] = d3.svg.line().x(X).y(Ya);
-			lines['b'] = d3.svg.line().x(X).y(Yb);
+			lines['a'] = d3.svg.line().interpolate('step-after').x(X).y(Ya);
+			lines['b'] = d3.svg.line().interpolate('step-after').x(X).y(Yb);
 
-			linesBrush['a'] = d3.svg.line().x(XBrush).y(YBrushA);
-			linesBrush['b'] = d3.svg.line().x(XBrush).y(YBrushB);
+			linesBrush['a'] = d3.svg.line().interpolate('step-after').x(XBrush).y(YBrushA);
+			linesBrush['b'] = d3.svg.line().interpolate('step-after').x(XBrush).y(YBrushB);
 
 	function chart(selection_) {
 		selection = selection_;
@@ -96,18 +97,57 @@ function spottedTail() {
 			// notes = parseDates(notes);
 			events = parseDates(events);
 
-			// Set our value categories to everything except for things called date
-			color.domain(Object.keys(legend));
+			var metric_names = Object.keys(legend);
 
-			var metrics = color.domain().map(function(name) {
-					return { 
-						name: name,
-						group: legend[name].group,
-						display_name: legend[name].service,
-						values: data.map(function(d) {
-							return {datetime: d.datetime, count: +d[name]};
-						})
+			// Set our value categories to everything except for things called date
+			color.domain(metric_names);
+
+			var metrics = metric_names.map(function(name) {
+				function reformatDatum(datum){
+					return {
+									timestamp: datum.timestamp, 
+									count: +datum[name]
+								};
+				}
+
+				var values = [];
+				data.forEach(function(d, index){
+					var fill_in = true,
+							prev_value,
+							prev_index = index - 1,
+							formatted_data;
+					// Don't let previous index go below zero
+					if (prev_index < 0) prev_index = 0;
+					// Return this object if its a timeseries_stat that has the key that is for this loop
+					// Only comes into play when dealing with sparse data
+					var metrics_captured_at_this_timestamp_stat = Object.keys(d),
+							timestamp_stat_includes_metric = metrics_captured_at_this_timestamp_stat.indexOf(name) != -1;
+					
+					if (fill_in) {
+						// If we're filling in, then add the previous value to this stat
+						// Or zero if the previous one doesn't exist.
+						if (!timestamp_stat_includes_metric) {
+							prev_value = data[prev_index][name] || 0;
+							d[name] = prev_value;
+							// Set this to true since we're always including it
+							timestamp_stat_includes_metric = true;
+						}
 					}
+					// This will be false if the key wasn't included and we're not filling in
+					if (timestamp_stat_includes_metric){
+						// Map this object
+						formatted_data = reformatDatum(d);
+						values.push(formatted_data);
+					}
+
+				})
+
+				return { 
+					name: name,
+					group: legend[name].group,
+					display_name: legend[name].service,
+					values: values
+				}
 			});
 
 			// Nest by group
@@ -115,7 +155,7 @@ function spottedTail() {
 				.key(function(d){ return d.group })
 				.map(metrics);
 
-			var x_domain = d3.extent(data, function(d) { return d.datetime; });
+			var x_domain = d3.extent(data, function(d) { return d.timestamp; });
 			var y_max = {};
 			y_max['a'] = d3.max(metrics['a'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
 			y_max['b'] = d3.max(metrics['b'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
@@ -328,22 +368,21 @@ function spottedTail() {
 				.html(function(d) { return d.name })
 				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ ( events_row_height/2 + this.getBBox().height/3 ) +')' }); // -10 to align with the axis numbers
 
-				// console.log(events)
 			// Add all the events to this row
 			var eventItems = eventTimelineCntnr.append('g')
 				.classed('ST-events', true)
 				.selectAll('.ST-event-circles')
-				.data(function(d) { return events.filter(function(f){ return f.impact_tags.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) })
+				.data(function(d) { return events.filter(function(f){ return f.impact_tags_full.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) })
 					.enter()
 					.append('g')
 					.selectAll('.ST-event-circle')
 					.data(function(d) { 
-						// var tag_array = $.extend(true, [], d.impact_tags)
-						d.impact_tags.forEach(function(tag){
-							tag.datetime = d.datetime;
+						// var tag_array = $.extend(true, [], d.impact_tags_full)
+						d.impact_tags_full.forEach(function(tag){
+							tag.timestamp = d.timestamp;
 							tag.name = d.name;
 						});
-						return d.impact_tags;
+						return d.impact_tags_full;
 					})
 					.enter();
 
@@ -352,7 +391,7 @@ function spottedTail() {
 				.style('clip-path', 'url(#ST-clip-circles)')
 				.attr('r', event_circle_radius)
 				.attr('transform', function(d) { return 'translate('+(margin.left)+',0)' })
-				.attr('cx', function(d){ return xScale(d.datetime) })
+				.attr('cx', function(d){ return xScale(d.timestamp) })
 				.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
 				.attr('cy', function(d,i) { 
 					// TODO, figure out how to stack more than three
@@ -400,17 +439,17 @@ function spottedTail() {
 			var brush_container = brushCtnr.selectAll('.ST-event-circles-wrapper-brush').data(eventSchema).enter();
 				
 			brush_container.append('g').selectAll('.ST-event-circles-container-brush')
-					.data(function(d){ console.log(d) ;return events.filter(function(f){ return f.impact_tags.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) })
+					.data(function(d){ return events.filter(function(f){ return f.impact_tags_full.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) })
 						.enter()
 						.append('g')
 							.selectAll('.ST-event-circles-brush')
-							.data(function(d) { return d.impact_tags }).enter()
+							.data(function(d) { return d.impact_tags_full }).enter()
 							.append('circle')
 								.classed('.ST-event-circle', true)
 								.attr('r', 3)
 								.attr('transform', function(d) { return 'translate(0,'+(yScalesBrush['a'].range()[0] - this.getBBox().height) +')' }) // Same as above, this can be either yScalesBrush
-								.attr('cx', function(d){ return xScale(d.datetime) })
-								.style('fill', function(d) { console.log(d);return d.color } )
+								.attr('cx', function(d){ return xScale(d.timestamp) })
+								.style('fill', function(d) { return d.color } )
 								.style('opacity', .5);
 
 			// And its xaxis
@@ -446,7 +485,7 @@ function spottedTail() {
 			noteLines.append('rect')
 				.attr('width', 10)
 				.attr('height', chart_height)
-				.attr('data-uid', function(d) { return d.uid } )
+				.attr('data-id', function(d) { return d.id } )
 				.attr('transform', 'translate(-5,0)') // Make this half the width so it's centered within the line
 				.on('mouseover', function(d){ noteTooltip(this, true) })
 				.on('mouseout', function(d){ noteTooltip(this, false) })
@@ -480,7 +519,7 @@ function spottedTail() {
 			// noteLines.append('rect')
 			// 	.attr('width', 10)
 			// 	.attr('height', yScaleBrush.range()[0])
-			// 	.attr('data-uid', function(d) { return d.uid } )
+			// 	.attr('data-id', function(d) { return d.id } )
 			// 	.attr('transform', 'translate(-5,0)') // Make this half the width so it's centered within the line
 			// 	.on('mouseover', function(d){ noteTooltip(this, true) })
 			// 	.on('mouseout', function(d){ noteTooltip(this, false) })
@@ -497,7 +536,7 @@ function spottedTail() {
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="a"] .ST-line').attr('d', function(d){ return lines['a'](d.values) });
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="b"] .ST-line').attr('d', function(d){ return lines['b'](d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
-				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.datetime) });
+				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.timestamp) });
 				// calcTimeInts();
 				// Report this out to the app.js
 				onBrush(xScale.domain())
@@ -511,11 +550,11 @@ function spottedTail() {
 						i = bisectDate(data, x0, 1),
 						d0 = data[i - 1],
 						d1 = data[i];
-				var d = x0 - d0.datetime > d1.datetime - x0 ? d1 : d0;
+				var d = x0 - d0.timestamp > d1.timestamp - x0 ? d1 : d0;
 				var point = d3.selectAll('.ST-point');
 				point.attr('transform', function(dd) { return 'translate(' + X(d) + ',' + yScales[dd.group](d[dd.name]) + ')' });
 				point.select('text')
-					.text(function(dd) { return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
+					.text(function(dd) {return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
 					.attr('x', function(dd){ return (-mouse_buffer - this.getBBox().width) });
 					// .attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_buffer*2) ? mouse_buffer : (-mouse_buffer - this.getBBox().width) });
 			}
@@ -544,7 +583,7 @@ function spottedTail() {
 
 	function parseDates(arr){
 		arr.forEach(function(d, i) {
-			if (typeof d.datetime == 'string') d.datetime = xValue(d);
+			if (typeof d.timestamp == 'number') d.timestamp = xValue(d);
 		});
 		return arr
 	}
@@ -574,7 +613,7 @@ function spottedTail() {
 
 	// The x-accessor for the path generator; xScale ∘ xValue.
 	function X(d) {
-		return xScale(d.datetime);
+		return xScale(d.timestamp);
 	}
 
 	// The x-accessor for the path generator; yScale ∘ yValue.
@@ -588,7 +627,7 @@ function spottedTail() {
 
 	// The x-accessor for the brush path generator; xScale ∘ xValue.
 	function XBrush(d) {
-		return xScaleBrush(d.datetime);
+		return xScaleBrush(d.timestamp);
 	}
 
 	// The x-accessor for the brush path generator; yScale ∘ yValue.

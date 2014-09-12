@@ -1,18 +1,11 @@
 (function(){
 
-	var formatDate = d3.time.format('%Y-%m-%d');
+	var timezone_offset = -4;
 	var legend =	{
 		facebook: {service: 'Facebook', metric: 'likes', color: '#3B5998', group: 'a'},
 		twitter: {service: 'Twitter', metric: 'mentions', color: '#55ACEE', group: 'a'},
 		pageviews: {service: '', metric: 'pageviews', color: '#fc0', group: 'b'}
 	}
-	var notes = [
-		{
-			datetime: '2001-09-01',
-			text: 'A sample note',
-			type: ['note']
-		}
-	]
 
 	var eventSchema = [
 		{
@@ -50,9 +43,9 @@
 
 	var events = [
 		{
-			datetime: '2000-04-01',
+			timestamp: 949363200,
 			name: 'Jon Stewart talked about us',
-			tags: [
+			impact_tags_full: [
 				{
 					category: 'citation',
 					attribute: 'media'
@@ -61,9 +54,9 @@
 			related_links: []
 		},
 		{
-			datetime: '2002-06-02',
+			timestamp: 959817600,
 			name: 'Jon Stewart talked about us',
-			tags: [
+			impact_tags_full: [
 				{
 					category: 'change',
 					attribute: 'media'
@@ -74,7 +67,11 @@
 	]
 				
 	var stChart = spottedTail()
-			.x(function(d) { return formatDate.parse(d.datetime); })
+			.x(function(d) { 
+				var utc_date = new Date(d.timestamp*1000),
+						user_timezone_date = new Date(new Date(utc_date).setHours(utc_date.getHours() + timezone_offset ));
+				return user_timezone_date;
+			})
 			.y(function(d) { return +d.count; })
 			.legend(legend)
 			.eventSchema(eventSchema)
@@ -82,7 +79,6 @@
 			.onBrush(function(dateRange){
 				console.log(dateRange)
 			})
-			// .notes(notes);
 
 	d3.csv('data/dummy-data.csv', drawChart);
 
