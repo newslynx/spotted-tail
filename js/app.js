@@ -76,9 +76,10 @@
 			.legend(legend)
 			.eventSchema(eventSchema)
 			.events(events)
+			.interpolate('step-after')
 			.onBrush(function(dateRange){
 				console.log(dateRange)
-			})
+			});
 
 	d3.csv('data/dummy-data.csv', drawChart);
 

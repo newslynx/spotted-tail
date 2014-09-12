@@ -31,6 +31,7 @@ function spottedTail() {
 			legend,
 			// notes,
 			eventSchema,
+			interpolate,
 			events,
 			onBrush,
 			number_of_legend_ticks = 3,
@@ -67,17 +68,20 @@ function spottedTail() {
 				return val + suffix;
 			});
 
-			lines['a'] = d3.svg.line().interpolate('step-after').x(X).y(Ya);
-			lines['b'] = d3.svg.line().interpolate('step-after').x(X).y(Yb);
-
-			linesBrush['a'] = d3.svg.line().interpolate('step-after').x(XBrush).y(YBrushA);
-			linesBrush['b'] = d3.svg.line().interpolate('step-after').x(XBrush).y(YBrushB);
 
 	function chart(selection_) {
 		selection = selection_;
 		selection.each(function(data, idx) {
 			d3.select(this).html('');
-			addButtons(this);
+			// addButtons(this);
+
+
+			lines['a'] = d3.svg.line().interpolate(interpolate).x(X).y(Ya);
+			lines['b'] = d3.svg.line().interpolate(interpolate).x(X).y(Yb);
+
+			linesBrush['a'] = d3.svg.line().interpolate(interpolate).x(XBrush).y(YBrushA);
+			linesBrush['b'] = d3.svg.line().interpolate(interpolate).x(XBrush).y(YBrushB);
+			
 			// Define the width based on the dimensions of the input container
 			var ctnr = document.getElementById(selection[idx][0].id);
 
@@ -697,6 +701,11 @@ function spottedTail() {
 	chart.eventSchema = function(__){
 		if (!arguments.length) return eventSchema;
 		eventSchema = __;
+		return chart;
+	}
+	chart.interpolate = function(__){
+		if (!arguments.length) return interpolate;
+		interpolate = __;
 		return chart;
 	}
 	chart.onBrush = function(__){
