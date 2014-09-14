@@ -95,7 +95,7 @@ function spottedTail() {
 			chart_height = chart_height*(dimensions.height - margin.top - margin.bottom);
 			chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
 			events_row_height = .28*chart_height;
-			event_circle_radius = 4.5;
+			event_circle_radius = 5;
 			data = parseDates(data);
 			// notes = parseDates(notes);
 			events = parseDates(events);
