@@ -32,6 +32,7 @@ function spottedTail() {
 			// notes,
 			eventSchema,
 			interpolate,
+			timezoneOffset,
 			events,
 			onBrush,
 			number_of_legend_ticks = 3,
@@ -73,8 +74,6 @@ function spottedTail() {
 		selection = selection_;
 		selection.each(function(data, idx) {
 			d3.select(this).html('');
-			// addButtons(this);
-
 
 			lines['a'] = d3.svg.line().interpolate(interpolate).x(X).y(Ya);
 			lines['b'] = d3.svg.line().interpolate(interpolate).x(X).y(Yb);
@@ -100,8 +99,6 @@ function spottedTail() {
 			data = parseDates(data);
 			// notes = parseDates(notes);
 			events = parseDates(events);
-
-			console.log(events)
 
 			var metric_names = Object.keys(legend);
 
@@ -469,7 +466,8 @@ function spottedTail() {
 				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.timestamp) });
 				// calcTimeInts();
 				// Report this out to the app.js
-				onBrush(xScale.domain())
+				var timestamp_range_unoffset  = setTimezoneOffset( xScale.domain(), true );
+				onBrush(timestamp_range_unoffset, brush.empty());
 			}
 
 			function mousemove(d) {
@@ -514,7 +512,6 @@ function spottedTail() {
 	}
 
 	function parseDates(arr){
-		console.log(arr)
 		arr.forEach(function(d, i) {
 			if (typeof d.timestamp == 'number') d.timestamp = xValue(d);
 		});
@@ -554,6 +551,24 @@ function spottedTail() {
 			defaults[prop] = opts[prop]
 		}
 		return defaults
+	}
+
+	function setTimezoneOffset(dateObj, unoffset){
+		var converted,
+				mode = 1;
+		if (unoffset) mode = -1;
+
+		if (Array.isArray(dateObj)){
+			converted = dateObj.map(convert);
+		} else {
+			converted = convert(dateObj)
+		}
+
+		function convert(dateObj){
+			return Math.round(dateObj.setHours(dateObj.getHours() + mode*timezoneOffset)/1000);
+		}
+
+		return converted;
 	}
 
 	chart.margin = function(__) {
@@ -605,6 +620,11 @@ function spottedTail() {
 	chart.onBrush = function(__){
 		if (!arguments.length) return onBrush;
 		onBrush = __;
+		return chart;
+	}
+	chart.timezoneOffset = function(__){
+		if (!arguments.length) return timezoneOffset;
+		timezoneOffset = __;
 		return chart;
 	}
 

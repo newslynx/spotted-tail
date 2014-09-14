@@ -76,9 +76,10 @@
 			.legend(legend)
 			.eventSchema(eventSchema)
 			.events(events)
+			.timezoneOffset(timezone_offset)
 			.interpolate('step-after')
-			.onBrush(function(dateRange){
-				console.log(dateRange)
+			.onBrush(function(dateRange, empty){
+				console.log(dateRange, empty)
 			});
 
 	d3.csv('data/dummy-data.csv', drawChart);
