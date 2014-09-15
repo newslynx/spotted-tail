@@ -9,6 +9,14 @@
 
 	var eventSchema = [
 		{
+			name: 'Promo.',
+			properties: {
+				color: '#c0f',
+				subTypes: [
+					{name: 'City council', color: '#fc1'}
+				]
+			}
+		},{
 			name: 'Citation',
 			properties: {
 				color: '#fc0',
@@ -16,7 +24,7 @@
 					{name: 'City council', color: '#fc1'}
 				]
 			}
-		},		{
+		},{
 			name: 'Change',
 			properties: {
 				color: '#f0c',
@@ -24,15 +32,15 @@
 					{name: 'Legislative action', color: '#f1c'}
 				]
 			}
-		},		{
-			name: 'Achievement',
+		},{
+			name: 'Achievem.',
 			properties: {
 				color: '#0cf',
 				subTypes: [
 					{name: 'Best monthly traffic', color: '#1cf'}
 				]
 			}
-		},		{
+		},{
 			name: 'Other',
 			properties: {
 				color: '#cc',
@@ -45,6 +53,8 @@
 		{
 			timestamp: 962409600,
 			name: 'Jon Stewart talked about us',
+			impact_tag_categories: ['citation'],
+			impact_tag_levels: ['media'],
 			impact_tags_full: [
 				{
 					category: 'citation',
@@ -52,10 +62,23 @@
 				}
 			],
 			related_links: []
-		},
-		{
-			timestamp: 975628800,
+		},{
+			timestamp: 976739900,
 			name: 'Jon Stewart talked about us',
+			impact_tag_categories: ['change'],
+			impact_tag_levels: ['media'],
+			impact_tags_full: [
+				{
+					category: 'change',
+					attribute: 'media'
+				}
+			],
+			related_links: []
+		},{
+			timestamp: 976739900,
+			name: 'Jon Stewart talked about us',
+			impact_tag_categories: ['change'],
+			impact_tag_levels: ['media'],
 			impact_tags_full: [
 				{
 					category: 'change',

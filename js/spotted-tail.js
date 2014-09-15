@@ -64,7 +64,7 @@ function spottedTail() {
 
 			yAxes['a'] = d3.svg.axis().scale(yScales['a']).orient('left').ticks(number_of_legend_ticks).tickFormat(d3.format('s'));
 			yAxes['b'] = d3.svg.axis().scale(yScales['b']).orient('right').ticks(number_of_legend_ticks).tickFormat(function(d, i){
-				var suffix = (i == number_of_legend_ticks - 1) ? ' Pvs' : '',
+				var suffix = (i == number_of_legend_ticks - 1) ? ' Pv' : '',
 						val = d3.format('s')(d);
 				return val + suffix;
 			});
@@ -86,7 +86,7 @@ function spottedTail() {
 
 			dimensions = {width: ctnr.offsetWidth, height: ctnr.offsetHeight};
 
-			margin = extend({top: 10, right: 48, bottom: 0, left: 100}, margin);
+			margin = extend({top: 10, right: 40, bottom: 0, left: 75}, margin);
 			marginEvents = extend({top: margin.top, top_buffer: 35, right: margin.right, bottom: 20, left: margin.left}, marginEvents); // topBuffer is for the bottom axis
 			marginBrush = extend({top: (dimensions.height * .9), right: margin.right, bottom: 0, left: margin.left}, marginBrush);
 			chart_width = dimensions.width - margin.left - margin.right;
@@ -98,7 +98,7 @@ function spottedTail() {
 			event_circle_radius = 5;
 			data = parseDates(data);
 			// notes = parseDates(notes);
-			events = parseDates(events);
+			events = transformEvents(events);
 
 			var metric_names = Object.keys(legend);
 
@@ -162,8 +162,8 @@ function spottedTail() {
 			var y_max = {};
 			y_max['a'] = d3.max(metrics['a'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
 			y_max['b'] = d3.max(metrics['b'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
-			y_domains['a'] = [0, (y_max['a'] + y_max['a']*.2)];
-			y_domains['b'] = [0, (y_max['b'] + y_max['b']*.2)];
+			y_domains['a'] = [0, (y_max['a'] + y_max['a']*.5)];
+			y_domains['b'] = [0, (y_max['b'] + y_max['b']*.1)];
 
 			// If the maxes are one, limit the number of y axis ticks to one
 			// Not sure why this isn't two since we have the 0 and then the 1
@@ -349,7 +349,9 @@ function spottedTail() {
 			var focus_container = focus_containers
 					.append('g')
 						.attr('class', 'ST-point')
-						.style('display', 'none');
+						.style('display', 'none')
+						.attr('transform', 'translate(-99,-99)'); // Start them off the screen.
+
 
 			// Add the circle
 			focus_container.append('circle')
@@ -383,8 +385,13 @@ function spottedTail() {
 			var eventItems = eventTimelineCntnr.append('g')
 				.classed('ST-events', true)
 				.selectAll('.ST-event-circles')
-				.data(function(d) { return events.filter(function(f){ return f.impact_tags_full.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) })
-					.enter()
+				.data(function(d) { 
+					// Get all the events for which the category in question `d.category` is among its impact categories
+					return events.filter(function(evt){ 
+						return evt.impact_tag_categories.indexOf(d.name.toLowerCase()) != -1;
+					}) 
+				})
+				.enter()
 					.append('g')
 					.selectAll('.ST-event-circle')
 					.data(function(d) { 
@@ -405,10 +412,11 @@ function spottedTail() {
 				.attr('cx', function(d){ return xScale(d.timestamp) })
 				.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
 				.attr('cy', function(d,i) { 
+					console.log(d,i)
 					// TODO, figure out how to stack more than three
 					// The 14 aligns it with the row caption
 					var y_offset = i*10 + 14;
-					return y_offset
+					return y_offset;
 				})
 				.on('mouseover', function(d){ console.log(d) })
 
@@ -451,8 +459,12 @@ function spottedTail() {
 			var brush_container = brushCtnr.selectAll('.ST-event-circles-wrapper-brush').data(eventSchema).enter();
 				
 			brush_container.append('g').selectAll('.ST-event-circles-container-brush')
-					.data(function(d){ return events.filter(function(f){ return f.impact_tags_full.some(function(g) { return g.category.indexOf(d.name.toLowerCase()) != -1 }) }) })
-						.enter()
+					.data(function(d){ 
+						return events.filter(function(evt){ 
+							return evt.impact_tag_categories.indexOf(d.name.toLowerCase()) != -1;
+						}) 
+					})
+					.enter()
 						.append('g')
 							.selectAll('.ST-event-circles-brush')
 							.data(function(d) { return d.impact_tags_full }).enter()
@@ -495,6 +507,14 @@ function spottedTail() {
 					.attr('x', function(dd){ return (-mouse_x_buffer - this.getBBox().width) })
 					.attr('y', -point_radius*3.3);
 					// .attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_x_buffer*2) ? mouse_x_buffer : (-mouse_x_buffer - this.getBBox().width) });
+			}
+
+			function transformEvents(evts){
+				// If we had any not serializable elements in our data, laterz
+				var events_copy = JSON.parse(JSON.stringify(evts));
+				events_copy = parseDates(events_copy);
+				// Now grab all the impact_tags and store them as top level info on the object
+				return events_copy;
 			}
 
 		});
