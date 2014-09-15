@@ -15,7 +15,8 @@ function spottedTail() {
 		['%Y', function() { return true; }]
 	]);
 
-	var dimensions = {},
+	var first_run = true,
+			dimensions = {},
 			margin = {},
 			marginBrush = {},
 			marginEvents = {},
@@ -70,6 +71,8 @@ function spottedTail() {
 			});
 
 
+
+
 	function chart(selection_) {
 		selection = selection_;
 		selection.each(function(data, idx) {
@@ -96,12 +99,16 @@ function spottedTail() {
 			chart_height_brush = dimensions.height - marginBrush.top - marginBrush.bottom;
 			events_row_height = .28*chart_height;
 			event_circle_radius = 5;
-			data = parseDates(data);
 			// notes = parseDates(notes);
-			events = transformEventsIntoSpots(events);
-			promotions = transformPromotionsIntoSpots(promotions);
-			spots = promotions.concat(events);
+			if (first_run){
+				data = parseDates(data);
+				events = transformEventsIntoSpots(events);
+				promotions = transformPromotionsIntoSpots(promotions);
+				spots = promotions.concat(events);
 
+			console.log(spots)
+
+			}
 			var metric_names = Object.keys(legend);
 
 			// Set our value categories to everything except for things called date
@@ -160,6 +167,7 @@ function spottedTail() {
 				.key(function(d){ return d.group })
 				.map(metrics);
 
+
 			var x_domain = d3.extent(data, function(d) { return d.timestamp; });
 			var y_max = {};
 			y_max['a'] = d3.max(metrics['a'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
@@ -174,6 +182,7 @@ function spottedTail() {
 					yAxes[ax] = d3.svg.axis().scale(yScales[ax]).orient('left').ticks(1).tickFormat(d3.format('f'));
 				}
 			})
+
 
 			// Update the x-scale.
 			xScale
@@ -416,7 +425,6 @@ function spottedTail() {
 				.attr('cx', function(d){ return xScale(d.timestamp) })
 				.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
 				.attr('cy', function(d,i) { 
-					console.log(d,i)
 					// TODO, figure out how to stack more than three
 					// The 14 aligns it with the row caption
 					var y_offset = i*10 + 14;
@@ -491,6 +499,9 @@ function spottedTail() {
 						.attr('height', chart_height_brush*.25)
 						.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
 						.on('mouseover', function(d){ console.log(d) });
+
+			// TODO, better updating
+			first_run = false;
 
 			function brushed(d) {
 				xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
