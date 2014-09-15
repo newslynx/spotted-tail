@@ -384,7 +384,9 @@ function spottedTail() {
 			eventTimelineCntnr.append('line')
 				.classed('ST-category-timeline-hr', true)
 				.attr('x1', 0)
-				.attr('x2', chart_width + margin.left + margin.right);
+				.attr('x2', chart_width + margin.left + margin.right)
+				.attr('y1', events_row_height)
+				.attr('y2', events_row_height);
 
 			eventTimelineCntnr.append('text')
 				.attr('text-anchor', 'end')
@@ -433,12 +435,12 @@ function spottedTail() {
 				.on('mouseover', function(d){ console.log(d) });
 
 
-			// Add a bottom rule
+			// Add a top rule
 			eventsCntnr.append('line')
 				.classed('ST-category-timeline-hr', true)
 				.attr('x1', 0)
 				.attr('x2', chart_width + margin.left + margin.right)
-				.attr('transform', 'translate(0,' + (eventsCntnr.node().getBBox().height + events_row_height/3) + ')');
+				.attr('transform', 'translate(0,0)')
 
 			// Update the brush path
 			brushCtnr.selectAll('.ST-metric-line[data-group="a"]')
@@ -553,17 +555,22 @@ function spottedTail() {
 					return promo;
 				});
 
-				var spots = d3.nest()
+				var spots = {};
+
+				if (promos_copy.length){
+					spots = d3.nest()
 											.key(function(d){ return d.type })
 											.map(promos_copy);
+					
+				}
 
 				// Return this in the same nested format as the others
 				return [
 					{
 						key: 'Promot.',
 						values: {
-							discrete: spots.discrete,
-							continuous: spots.continuous
+							discrete: spots.discrete || [],
+							continuous: spots.continuous || []
 						}
 					}
 				]
@@ -593,7 +600,7 @@ function spottedTail() {
 
 						if (abbreved_names[category]) { pretty_category = abbreved_names[category]; }
 
-						pretty_category = pretty_category.charAt(0).toUpperCase() + category.slice(1);
+						pretty_category = pretty_category.charAt(0).toUpperCase() + pretty_category.slice(1);
 
 						var spot = {
 							timestamp: evt.timestamp,
