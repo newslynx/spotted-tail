@@ -7,45 +7,22 @@
 		pageviews: {service: '', metric: 'pageviews', color: '#fc0', group: 'b'}
 	}
 
-	var eventSchema = [
+	var promotions = [
 		{
-			name: 'Promo.',
-			properties: {
-				color: '#c0f',
-				subTypes: [
-					{name: 'City council', color: '#fc1'}
-				]
-			}
-		},{
-			name: 'Citation',
-			properties: {
-				color: '#fc0',
-				subTypes: [
-					{name: 'City council', color: '#fc1'}
-				]
-			}
-		},{
-			name: 'Change',
-			properties: {
-				color: '#f0c',
-				subTypes: [
-					{name: 'Legislative action', color: '#f1c'}
-				]
-			}
-		},{
-			name: 'Achievem.',
-			properties: {
-				color: '#0cf',
-				subTypes: [
-					{name: 'Best monthly traffic', color: '#1cf'}
-				]
-			}
-		},{
-			name: 'Other',
-			properties: {
-				color: '#cc',
-				subTypes: []
-			}
+			timestamp: [962409600,976739900],
+			category: 'promotion',
+			level: 'homepage',
+			link: 'http://mhkeller.com',
+			text: 'mhk',
+			color: '#fc0'
+		},
+		{
+			timestamp: 976739900,
+			category: 'promotion',
+			level: 'tweet',
+			link: 'http://twitter.com/mhkeller',
+			text: 'mhk',
+			color: '#cf0'
 		}
 	]
 
@@ -58,7 +35,9 @@
 			impact_tags_full: [
 				{
 					category: 'citation',
-					attribute: 'media'
+					attribute: 'media',
+					name: 'media citation',
+					color: '#c0f'
 				}
 			],
 			related_links: []
@@ -70,7 +49,9 @@
 			impact_tags_full: [
 				{
 					category: 'change',
-					attribute: 'media'
+					attribute: 'media',
+					name: 'media change',
+					color: '#0cf'
 				}
 			],
 			related_links: []
@@ -82,7 +63,9 @@
 			impact_tags_full: [
 				{
 					category: 'change',
-					attribute: 'media'
+					attribute: 'media',
+					name: 'media change',
+					color: '#f0c'
 				}
 			],
 			related_links: []
@@ -90,15 +73,10 @@
 	]
 				
 	var stChart = spottedTail()
-			.x(function(d) {
-				var utc_date = new Date(d.timestamp*1000),
-						user_timezone_date = new Date(new Date(utc_date).setHours(utc_date.getHours() + timezone_offset ));
-				return user_timezone_date;
-			})
 			.y(function(d) { return +d.count; })
 			.legend(legend)
-			.eventSchema(eventSchema)
 			.events(events)
+			.promotions(promotions)
 			.timezoneOffset(timezone_offset)
 			.interpolate('step-after')
 			.onBrush(function(dateRange, empty){

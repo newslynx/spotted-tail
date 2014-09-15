@@ -29,8 +29,8 @@ function spottedTail() {
 			xValue,
 			yValue,
 			legend,
-			// notes,
-			eventSchema,
+			spots,
+			promotions,
 			interpolate,
 			timezoneOffset,
 			events,
@@ -98,7 +98,9 @@ function spottedTail() {
 			event_circle_radius = 5;
 			data = parseDates(data);
 			// notes = parseDates(notes);
-			events = transformEvents(events);
+			events = transformEventsIntoSpots(events);
+			promotions = transformPromotionsIntoSpots(promotions);
+			spots = promotions.concat(events);
 
 			var metric_names = Object.keys(legend);
 
@@ -364,7 +366,7 @@ function spottedTail() {
 
 			// Events container, let's use `_` suffix to mean the enter selection
 			var eventTimelineCntnr_ = eventsCntnr.selectAll('.ST-category-timeline')
-				.data(eventSchema).enter();
+				.data(spots).enter();
 
 			var eventTimelineCntnr = eventTimelineCntnr_.append('g')
 				.classed('ST-category-timeline', true)
@@ -378,33 +380,35 @@ function spottedTail() {
 			eventTimelineCntnr.append('text')
 				.attr('text-anchor', 'end')
 				.classed('ST-category-timeline-name', true)
-				.html(function(d) { return d.name })
+				.html(function(d) { return d.key; })
 				.attr('transform', function(d) { return 'translate('+(margin.left - 10)+','+ ( this.getBBox().height + 5 ) +')' }); // -10 to align with the axis numbers, 5 to give the text some padding
 
-			// Add all the events to this row
-			var eventItems = eventTimelineCntnr.append('g')
-				.classed('ST-events', true)
-				.selectAll('.ST-event-circles')
-				.data(function(d) { 
-					// Get all the events for which the category in question `d.category` is among its impact categories
-					return events.filter(function(evt){ 
-						return evt.impact_tag_categories.indexOf(d.name.toLowerCase()) != -1;
-					}) 
-				})
-				.enter()
-					.append('g')
-					.selectAll('.ST-event-circle')
-					.data(function(d) { 
-						// var tag_array = $.extend(true, [], d.impact_tags_full)
-						d.impact_tags_full.forEach(function(tag){
-							tag.timestamp = d.timestamp;
-							tag.name = d.name;
-						});
-						return d.impact_tags_full;
-					})
+			// Add all the continuous items to this row
+			var eventItems_continuous = eventTimelineCntnr.append('g')
+				.classed('ST-events-continuous', true)
+				.selectAll('.ST-event-rect')
+					.data(function(d) { return d.values.continuous; })
 					.enter();
 
-			eventItems.append('circle')
+			eventItems_continuous.append('rect')
+				.classed('ST-event-rect', true)
+				.style('clip-path', 'url(#ST-clip-circles)')
+				.attr('transform', function(d) { return 'translate('+(margin.left)+',1)' }) // Offset this one so the top border can show
+				.attr('x', function(d){ return xScale(d.timestamp[0]) })
+				.attr('width', function(d){ return xScale(d.timestamp[1]) - xScale(d.timestamp[0]) })
+				.attr('height', events_row_height - 1) // Make this minus one so it doesn't go below the bottom border
+				.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
+				.on('mouseover', function(d){ console.log(d) });
+
+
+			// Add all the discrete items to this row
+			var eventItems_discrete = eventTimelineCntnr.append('g')
+				.classed('ST-events-discrete', true)
+				.selectAll('.ST-event-circle')
+					.data(function(d) { return d.values.discrete; })
+					.enter();
+
+			eventItems_discrete.append('circle')
 				.classed('ST-event-circle', true)
 				.style('clip-path', 'url(#ST-clip-circles)')
 				.attr('r', event_circle_radius)
@@ -418,7 +422,8 @@ function spottedTail() {
 					var y_offset = i*10 + 14;
 					return y_offset;
 				})
-				.on('mouseover', function(d){ console.log(d) })
+				.on('mouseover', function(d){ console.log(d) });
+
 
 			// Add a bottom rule
 			eventsCntnr.append('line')
@@ -456,25 +461,36 @@ function spottedTail() {
 					.attr('d', function(d) { return linesBrush['b'](d.values); })
 					.style('stroke', function(d) { return legend[d.name].color || color(d.name); })
 			
-			var brush_container = brushCtnr.selectAll('.ST-event-circles-wrapper-brush').data(eventSchema).enter();
-				
-			brush_container.append('g').selectAll('.ST-event-circles-container-brush')
-					.data(function(d){ 
-						return events.filter(function(evt){ 
-							return evt.impact_tag_categories.indexOf(d.name.toLowerCase()) != -1;
-						}) 
-					})
-					.enter()
-						.append('g')
-							.selectAll('.ST-event-circles-brush')
-							.data(function(d) { return d.impact_tags_full }).enter()
-							.append('circle')
-								.classed('.ST-event-circle', true)
-								.attr('r', 3)
-								.attr('transform', function(d) { return 'translate(0,'+(yScalesBrush['a'].range()[0] - this.getBBox().height) +')' }) // Same as above, this can be either yScalesBrush
-								.attr('cx', function(d){ return xScale(d.timestamp) })
-								.style('fill', function(d) { return d.color } )
-								.style('opacity', .5);
+			var brush_categories_container = brushCtnr.selectAll('.ST-categories-brush').data(spots).enter()
+				.append('g')
+				.classed('.ST-categories-brushed', true);
+
+			brush_categories_container.selectAll('.ST-events-discrete-brush')
+				.data(function(d){ return d.values.discrete; })
+				.enter()
+					.append('circle')
+						.classed('.ST-event-circle', true)
+						.attr('r', 3)
+						.attr('transform', function(d) { return 'translate(0,'+(yScalesBrush['a'].range()[0] - this.getBBox().height) +')' }) // Same as above, this can be either yScalesBrush
+						.attr('cx', function(d){ return xScale(d.timestamp) })
+						.style('fill', function(d) { return d.color } )
+						.style('opacity', .5);
+
+
+			// // Add all the continuous items to this row
+			brush_categories_container.selectAll('.ST-event-continuous-brush')
+				.data(function(d) { return d.values.continuous; })
+				.enter()
+					.append('rect')
+						.classed('ST-event-rect', true)
+						.style('clip-path', 'url(#ST-clip-circles)')
+						// .attr('transform', function(d) { return 'translate('+(margin.left)+',0)' })
+						.attr('x', function(d){ return xScale(d.timestamp[0]) })
+						.attr('y', chart_height_brush - chart_height_brush*.25)
+						.attr('width', function(d){ return xScale(d.timestamp[1]) - xScale(d.timestamp[0]) })
+						.attr('height', chart_height_brush*.25)
+						.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
+						.on('mouseover', function(d){ console.log(d) });
 
 			function brushed(d) {
 				xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
@@ -484,6 +500,8 @@ function spottedTail() {
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="b"] .ST-line').attr('d', function(d){ return lines['b'](d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
 				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.timestamp) });
+				eventTimelineCntnr.selectAll('rect').attr('x', function(d) { return xScale(d.timestamp[0]) })
+																						.attr('width', function(d) { return xScale(d.timestamp[1]) - xScale(d.timestamp[0]) })
 				// calcTimeInts();
 				// Report this out to the app.js
 				var timestamp_range_unoffset  = setTimezoneOffset( xScale.domain(), true );
@@ -509,12 +527,92 @@ function spottedTail() {
 					// .attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_x_buffer*2) ? mouse_x_buffer : (-mouse_x_buffer - this.getBBox().width) });
 			}
 
-			function transformEvents(evts){
+
+			function transformPromotionsIntoSpots(promos){
+				var promos_copy = JSON.parse(JSON.stringify(promos));
+
+				promos_copy = parseDates(promos_copy);
+
+				promos_copy = promos_copy.map(function(promo){
+					var type = 'discrete';
+					if (Array.isArray(promo.timestamp)) {
+						type = 'continuous';
+					}
+					promo.type = type;
+					return promo;
+				});
+
+				var spots = d3.nest()
+											.key(function(d){ return d.type })
+											.map(promos_copy);
+
+				// Return this in the same nested format as the others
+				return [
+					{
+						key: 'Promot.',
+						values: {
+							discrete: spots.discrete,
+							continuous: spots.continuous
+						}
+					}
+				]
+			}
+
+			function transformEventsIntoSpots(evts){
 				// If we had any not serializable elements in our data, laterz
 				var events_copy = JSON.parse(JSON.stringify(evts));
 				events_copy = parseDates(events_copy);
+
+				var abbreved_names = {
+							achievement: 'achievem.'
+						};
+
 				// Now grab all the impact_tags and store them as top level info on the object
-				return events_copy;
+				// Turn this object inside out, copy parent attributes onto each impact_tag
+				// These are no longer `evets` per se, bc one event can be represented multiple times.
+				// They're more like spots.
+				var spots = [];
+				events_copy.forEach(function(evt){
+					evt.impact_tags_full.forEach(function(impactTagFull){
+						// Grab all the top level stuff on this object
+						// And this impact tag
+
+						var category = impactTagFull.category,
+								pretty_category = impactTagFull.category;
+
+						if (abbreved_names[category]) { pretty_category = abbreved_names[category]; }
+
+						pretty_category = pretty_category.charAt(0).toUpperCase() + category.slice(1);
+
+						var spot = {
+							timestamp: evt.timestamp,
+							event_name: evt.name,
+							link: evt.link,
+							significance: evt.significance,
+							text: evt.text,
+							title: evt.title,
+							what_happened: evt.what_happened,
+							category: impactTagFull.category,
+							pretty_category: pretty_category,
+							level: impactTagFull.level,
+							color: impactTagFull.color,
+							tag_name: impactTagFull.name
+						}
+						spots.push(spot);
+					});
+				});
+
+				var spotsByCategory = d3.nest()
+									.key(function(d){ return d.pretty_category })
+									.rollup(function(list){
+										return {
+											discrete: list,
+											continuous: []
+										}
+									})
+									.entries(spots);
+
+				return spotsByCategory;
 			}
 
 		});
@@ -535,15 +633,24 @@ function spottedTail() {
 	// 	xAxis.tickValues(ints);
 	// }
 
-	function isArray(testVar){
-		return Object.prototype.toString.call( testVar ) == '[object Array]';
-	}
-
 	function parseDates(arr){
-		arr.forEach(function(d, i) {
-			if (typeof d.timestamp == 'number') d.timestamp = xValue(d);
+		var converted = arr.map(function(d) {
+			var converted;
+
+			if (Array.isArray(d.timestamp)) { 
+				d.timestamp = d.timestamp.map(convert);
+			} else { 
+				d.timestamp = convert(d.timestamp);
+			}
+
+			return d;
 		});
-		return arr
+
+		function convert(timestamp){
+			timestamp = timestamp*1000;
+			return new Date(setTimezoneOffset(new Date(timestamp))*1000);
+		}
+		return converted;
 	}
 
 	// The x-accessor for the path generator; xScale ∘ xValue.
@@ -593,7 +700,7 @@ function spottedTail() {
 		}
 
 		function convert(dateObj){
-			return Math.round(dateObj.setHours(dateObj.getHours() + mode*timezoneOffset)/1000);
+			return dateObj.setHours(dateObj.getHours() + mode*timezoneOffset)/1000;
 		}
 
 		return converted;
@@ -611,11 +718,11 @@ function spottedTail() {
 		return chart;
 	};
 
-	chart.x = function(__) {
-		if (!arguments.length) return xValue;
-		xValue = __;
-		return chart;
-	};
+	// chart.x = function(__) {
+	// 	if (!arguments.length) return xValue;
+	// 	xValue = __;
+	// 	return chart;
+	// };
 
 	chart.y = function(__) {
 		if (!arguments.length) return yValue;
@@ -635,9 +742,9 @@ function spottedTail() {
 		return chart;
 	}
 
-	chart.eventSchema = function(__){
-		if (!arguments.length) return eventSchema;
-		eventSchema = __;
+	chart.promotions = function(__){
+		if (!arguments.length) return promotions;
+		promotions = __;
 		return chart;
 	}
 	chart.interpolate = function(__){
