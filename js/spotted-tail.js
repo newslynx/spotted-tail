@@ -53,7 +53,6 @@ function spottedTail() {
 			brush = d3.svg.brush().x(xScaleBrush),
 			bisectDate = d3.bisector(function(d) { return d.timestamp; }).left,
 			ppNumber = function(str) { 
-				// console.log(str)
 				if (typeof str != 'string') str = str.toString();
 				return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
 			},
@@ -132,12 +131,12 @@ function spottedTail() {
 							prev_index = index - 1,
 							formatted_data;
 					// Don't let previous index go below zero
-					if (prev_index < 0) prev_index = 0;
-					// Return this object if its a timeseries_stat that has the key that is for this loop
+					if (prev_index < 0) { prev_index = 0; }
+					// Return this object if it's a timeseries_stat that has the key that is for this loop
 					// Only comes into play when dealing with sparse data
 					var metrics_captured_at_this_timestamp_stat = Object.keys(d),
 							timestamp_stat_includes_metric = metrics_captured_at_this_timestamp_stat.indexOf(name) != -1;
-					
+
 					if (fill_in) {
 						// If we're filling in, then add the previous value to this stat
 						// Or zero if the previous one doesn't exist.
@@ -145,7 +144,7 @@ function spottedTail() {
 							prev_value = data[prev_index][name] || 0;
 							d[name] = prev_value;
 							// Set this to true since we're always including it
-							timestamp_stat_includes_metric = true;
+							timestamp_stat_includes_metric = fill_in;
 						}
 					}
 					// This will be false if the key wasn't included and we're not filling in
@@ -155,7 +154,7 @@ function spottedTail() {
 						values.push(formatted_data);
 					}
 
-				})
+				});
 
 				return { 
 					name: name,
@@ -233,7 +232,7 @@ function spottedTail() {
 				.append('rect')
 					.attr('width', chart_width + 1 + event_circle_radius*2) // Add one so the lines dont' appear clipped
 					.attr('height', chart_height)
-					.attr('transform', 'translate(-'+event_circle_radius+',0)')
+					.attr('transform', 'translate('+(-1*event_circle_radius + margin.left)+',0)')
 
 			// Lines
 			var lineChartCtnr = svg.append('g')
@@ -402,42 +401,62 @@ function spottedTail() {
 			// Add all the continuous items to this row
 			var eventItems_continuous = eventTimelineCntnr.append('g')
 				.classed('ST-events-continuous', true)
-				.selectAll('.ST-event-rect')
+				.style('clip-path', 'url(#ST-clip-circles)')
+				.selectAll('.ST-event-rect-g')
 					.data(function(d) { return d.values.continuous; })
 					.enter();
 
-			eventItems_continuous.append('rect')
+			var continuous_g = eventItems_continuous.append('g')
+				.classed('ST-event-rect-g', true)
+				.classed('ST-tooltipped', true)
+				.attr('transform', function(d) { return 'translate('+(margin.left + xScale(d.timestamp[0]))+',1)' }) // Offset this one so the top border can show
+
+			continuous_g.append('rect')
 				.classed('ST-event-rect', true)
-				.style('clip-path', 'url(#ST-clip-circles)')
-				.attr('transform', function(d) { return 'translate('+(margin.left)+',1)' }) // Offset this one so the top border can show
-				.attr('x', function(d){ return xScale(d.timestamp[0]) })
+				.attr('x', '0')
 				.attr('width', function(d){ return xScale(d.timestamp[1]) - xScale(d.timestamp[0]) })
 				.attr('height', events_row_height - 1) // Make this minus one so it doesn't go below the bottom border
-				.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
-				.on('mouseover', function(d){ console.log(d) });
+				.style('fill', function(d) { return d.color; }); // Get the color of the first impact tag
+
+			continuous_g.append('text')
+				.text(function(d){
+					var pretty_date = d.timestamp.map(function(timestamp){ return new Date(timestamp).toLocaleTimeString() }).join(' to ');
+					return pretty_date + ': ' + d.level;
+				})
+				.attr('text-anchor', 'middle')
+				.attr('transform', function(d){
+					var width = xScale(d.timestamp[1]) - xScale(d.timestamp[0]) 
+					return 'translate('+width/2+','+(events_row_height/2 + 3)+')';
+				});
 
 
 			// Add all the discrete items to this row
 			var eventItems_discrete = eventTimelineCntnr.append('g')
 				.classed('ST-events-discrete', true)
-				.selectAll('.ST-event-circle')
+				.style('clip-path', 'url(#ST-clip-circles)')
+				.selectAll('.ST-event-circle-g')
 					.data(function(d) { return d.values.discrete; })
 					.enter();
 
-			eventItems_discrete.append('circle')
+			var discrete_g = eventItems_discrete.append('g')
+				.classed('ST-event-circle-g', true)
+				.classed('ST-tooltipped', true)
+				.attr('transform', function(d,i) { return 'translate('+(margin.left + xScale(d.timestamp) )+','+(i*10 + 14)+')' });
+
+			discrete_g.append('circle')
 				.classed('ST-event-circle', true)
-				.style('clip-path', 'url(#ST-clip-circles)')
 				.attr('r', event_circle_radius)
-				.attr('transform', function(d) { return 'translate('+(margin.left)+',0)' })
-				.attr('cx', function(d){ return xScale(d.timestamp) })
 				.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
-				.attr('cy', function(d,i) { 
-					// TODO, figure out how to stack more than three
-					// The 14 aligns it with the row caption
-					var y_offset = i*10 + 14;
-					return y_offset;
+
+
+			discrete_g.append('text')
+				.text(function(d){
+					var pretty_date = new Date(d.timestamp).toLocaleDateString();
+					// TODO, figure out event names and things
+					return pretty_date + ' - ' + d.title + ': ' + d.level
 				})
-				.on('mouseover', function(d){ console.log(d) });
+				.attr('text-anchor', 'middle')
+				.attr('transform', function(d,i){ return 'translate(0,'+(i*10+14)+')'}); // minus one because YOLO
 
 
 			// Add a top rule
@@ -504,8 +523,8 @@ function spottedTail() {
 						.attr('y', chart_height_brush - chart_height_brush*.25)
 						.attr('width', function(d){ return xScale(d.timestamp[1]) - xScale(d.timestamp[0]) })
 						.attr('height', chart_height_brush*.25)
-						.style('fill', function(d) { return d.color; }) // Get the color of the first impact tag
-						.on('mouseover', function(d){ console.log(d) });
+						.style('fill', function(d) { return d.color; }); // Get the color of the first impact tag
+						// .on('mouseover', function(d){ console.log(d) });
 
 			// TODO, better updating
 			first_run = false;
@@ -517,9 +536,18 @@ function spottedTail() {
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="a"] .ST-line').attr('d', function(d){ return lines['a'](d.values) });
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="b"] .ST-line').attr('d', function(d){ return lines['b'](d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
-				eventTimelineCntnr.selectAll('circle').attr('cx', function(d) { return xScale(d.timestamp) });
-				eventTimelineCntnr.selectAll('rect').attr('x', function(d) { return xScale(d.timestamp[0]) })
-																						.attr('width', function(d) { return xScale(d.timestamp[1]) - xScale(d.timestamp[0]) })
+				eventTimelineCntnr.selectAll('.ST-event-circle-g').attr('transform', function(d,i) { return 'translate('+xScale(d.timestamp)+','+(i*10+14)+')' });
+				var rect_g = eventTimelineCntnr.selectAll('.ST-event-rect-g').attr('transform', function(d) { return 'translate('+(xScale(d.timestamp[0]) + margin.left)+',1)' })
+				rect_g.select('rect')
+						.attr('width', function(d) { 
+							return xScale(d.timestamp[1]) - xScale(d.timestamp[0]) 
+						});
+
+				rect_g.select('text')
+						.attr('transform', function(d){
+							var width = xScale(d.timestamp[1]) - xScale(d.timestamp[0]) 
+							return 'translate('+width/2+','+(events_row_height/2 + 3)+')';
+						})
 				// calcTimeInts();
 				// Report this out to the app.js
 				var timestamp_range_unoffset  = setTimezoneOffset( xScale.domain(), true );
@@ -535,14 +563,17 @@ function spottedTail() {
 						i = bisectDate(data, x0, 1),
 						d0 = data[i - 1],
 						d1 = data[i];
-				var d = x0 - d0.timestamp > d1.timestamp - x0 ? d1 : d0;
-				var point = d3.selectAll('.ST-point');
-				point.attr('transform', function(dd) { return 'translate(' + X(d) + ',' + yScales[dd.group](d[dd.name]) + ')' });
-				point.select('text')
-					.text(function(dd) {return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
-					.attr('x', function(dd){ return (-mouse_x_buffer - this.getBBox().width) })
-					.attr('y', -point_radius*3.3);
-					// .attr('x', function(dd){ return (m < chart_width - this.getBBox().width - mouse_x_buffer*2) ? mouse_x_buffer : (-mouse_x_buffer - this.getBBox().width) });
+				if (d0 && d1){
+					var d = x0 - d0.timestamp > d1.timestamp - x0 ? d1 : d0;
+					var point = d3.selectAll('.ST-point'),
+							x_position = X(d);
+					point.attr('transform', function(dd) { return 'translate(' + x_position + ',' + yScales[dd.group](d[dd.name]) + ')' });
+					point.select('text')
+						.text(function(dd) {return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
+						// .attr('x', function(dd){ return (-mouse_x_buffer - this.getBBox().width) })
+						.attr('y', -point_radius*3.3)
+						.attr('x', function(dd){ return (x_position < chart_width - this.getBBox().width - mouse_x_buffer*2) ? mouse_x_buffer : (-mouse_x_buffer - this.getBBox().width) });
+				}
 			}
 
 
