@@ -49,27 +49,6 @@
 	font-size 1.2em
 	text-shadow 0 0 6px #fff
 
-.ST-note line
-	stroke #ccc
-	stroke-width 1px
-
-.ST-note rect
-	fill none
-	pointer-events all
-
-.ST-note.ST-active line
-	stroke #000
-
-.ST-note.ST-active text
-	display block !important
-
-.ST-note-btns
-	position absolute
-	left 0
-	bottom 0
-	button
-		width 100%
-		display block
 
 .ST-y,.ST-brush
 	path.domain,.tick line
@@ -81,6 +60,11 @@
 			transform translateY(5px)
 		line
 			stroke none
+
+.ST-brush
+	.ST-event-rect,
+	.ST-event-circle
+		pointer-events none
 
 .ST-category-timeline-hr
 	stroke #ccc
