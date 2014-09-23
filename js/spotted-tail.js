@@ -114,8 +114,6 @@ function spottedTail() {
 			events_row_height = 50;
 			event_circle_radius = 5;
 
-			console.log(chart_height_brush_full, chart_height_brush)
-
 
 			// Set the height back to the container
 			var st_height = (chart_height_full + chart_height_brush_full + events_row_height*number_of_event_rows + marginEvents.top + marginEvents.top_buffer) + 'px';
@@ -533,8 +531,7 @@ function spottedTail() {
 						.attr('y', chart_height_brush - chart_height_brush*.25)
 						.attr('width', function(d){ return xScale(d.timestamp[1]) - xScale(d.timestamp[0]) })
 						.attr('height', chart_height_brush*.25)
-						.style('fill', function(d) { return d.color; }); // Get the color of the first impact tag
-						// .on('mouseover', function(d){ console.log(d) });
+						.style('fill', function(d) { return d.color; }); // Get the color
 
 			// TODO, better updating
 			first_run = false;
