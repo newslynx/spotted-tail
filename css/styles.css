@@ -71,7 +71,12 @@
   transform: translateY(5px);
 }
 .ST-x .tick line {
-  stroke: none;
+  stroke: #ccc;
+}
+.ST-brush g:not(.ST-brusher) {
+  opacity: 0.5;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+  filter: alpha(opacity=50);
 }
 .ST-brush .ST-event-rect,
 .ST-brush .ST-event-circle {
