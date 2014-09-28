@@ -114,7 +114,6 @@ function spottedTail() {
 			events_row_height = 50;
 			event_circle_radius = 5;
 
-
 			// Set the height back to the container
 			var st_height = (chart_height_full + chart_height_brush_full + events_row_height*number_of_event_rows + marginEvents.top + marginEvents.top_buffer) + 'px';
 
@@ -327,9 +326,18 @@ function spottedTail() {
 
 			// Tuck the first one in by half its width
 			// You could also set `text-anchor` to `start` but that wasn't working
-			lineChartCtnr.select('.ST-x.ST-axis')
-					.selectAll('.tick text')
-						.attr('x', function(d,i){ return (i == 0) ? this.getBBox().width/2 : 0 });
+			// lineChartCtnr.select('.ST-x.ST-axis')
+			// 		.selectAll('.tick text')
+			// 			.each(function(d,i){ 
+			// 				var offset;
+			// 				if (i == 0) {
+			// 					if (this.getBBox() && this.getBBox().width) {
+			// 						offset = this.getBBox().width;
+			// 						d3.select(this).attr('x', offset);
+			// 					}
+			// 				}
+			// 			});
+						// .attr('x', function(d,i){ return (i == 0) ? this.getBBox().width/2 : 0 });
 						// .attr('text-anchor', function(d,i){ return (i == 0) ? 'start' : 'middle'})
 
 			// Extend the line all the way to the left and right
@@ -531,7 +539,8 @@ function spottedTail() {
 						.attr('y', chart_height_brush - chart_height_brush*.25)
 						.attr('width', function(d){ return xScale(d.timestamp[1]) - xScale(d.timestamp[0]) })
 						.attr('height', chart_height_brush*.25)
-						.style('fill', function(d) { return d.color; }); // Get the color
+						.style('fill', function(d) { return d.color; }); // Get the color of the first impact tag
+						// .on('mouseover', function(d){ console.log(d) });
 
 			// TODO, better updating
 			first_run = false;
@@ -543,7 +552,7 @@ function spottedTail() {
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="a"] .ST-line').attr('d', function(d){ return lines['a'](d.values) });
 				lineChartCtnr.selectAll('.ST-metric-line[data-group="b"] .ST-line').attr('d', function(d){ return lines['b'](d.values) });
 				lineChartCtnr.select('.ST-x.ST-axis').call(xAxis);
-				eventTimelineCntnr.selectAll('.ST-event-circle-g').attr('transform', function(d,i) { return 'translate('+xScale(d.timestamp)+','+(i*10+14)+')' });
+				eventTimelineCntnr.selectAll('.ST-event-circle-g').attr('transform', function(d,i) { return 'translate('+(margin.left + xScale(d.timestamp))+','+(i*10+14)+')' });
 				var rect_g = eventTimelineCntnr.selectAll('.ST-event-rect-g').attr('transform', function(d) { return 'translate('+(xScale(d.timestamp[0]) + margin.left)+',1)' })
 				rect_g.select('rect')
 						.attr('width', function(d) { 
