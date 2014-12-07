@@ -33,6 +33,7 @@ function spottedTail() {
 			yValue,
 			legend,
 			spots,
+			spot_values,
 			promotions,
 			interpolate,
 			timezone,
@@ -95,7 +96,9 @@ function spottedTail() {
 				events = transformEventsIntoSpots(events);
 				promotions = transformPromotionsIntoSpots(promotions);
 				spots = promotions.concat(events);
-
+				spot_values = spots.map(function(sp){
+					return sp.values.discrete;
+				});
 			}
 			var number_of_event_rows = spots.length;
 
@@ -259,7 +262,7 @@ function spottedTail() {
 					.attr('pointer-events', 'all')
 					.on('mouseover', function() {d3.selectAll('.ST-point').style('display', null); })
 					.on('mouseout', function() { d3.selectAll('.ST-point').style('display', 'none'); })
-					.on('mousemove', mousemove)
+					.on('mousemove', setHoverInfo)
 
 			// line with clipping path, axes
 			lineChartCtnr.append('g').attr('class', 'ST-y ST-axis').attr('data-group','a');
@@ -585,37 +588,62 @@ function spottedTail() {
 				onBrush(timestamp_range_unoffset, brush.empty());
 			}
 
-			// function setHoverInfo(d){
-			// 	var that = this,
-			// 			mouse_coords = d3.mouse(that),
-			// 			mouse_x = mouse_coords[0],
-			// 			mouse_y = mouse_coords[1];
+			function setHoverInfo(d){
+				var that = this,
+						mouse_coords = d3.mouse(that),
+						mouse_x = mouse_coords[0],
+						mouse_y = mouse_coords[1],
+						data_val_at_mouse_x = xScale.invert(mouse_x),
+						idx_at_svg_x = bisectDate(data, data_val_at_mouse_x, 1),
+						d0 = data[idx_at_svg_x - 1],
+						d1 = data[idx_at_svg_x],
+						hover_data = {};
 
-			// 	console.log(mouse_coords)
 
-			// }
+				hover_data.moment = data_val_at_mouse_x;
 
-			function mousemove(d) {
-				var that = this;
-				var point_radius = 3,
-						mouse_x_buffer = -point_radius;
-				var m = d3.mouse(that)[0],
-						x0 = xScale.invert(m),
-						i = bisectDate(data, x0, 1),
-						d0 = data[i - 1],
-						d1 = data[i];
+				// Get some data on the timeseries information
 				if (d0 && d1){
-					var d = x0 - d0.timestamp > d1.timestamp - x0 ? d1 : d0;
-					var point = d3.selectAll('.ST-point'),
-							x_position = X(d);
-					point.attr('transform', function(dd) { return 'translate(' + x_position + ',' + yScales[dd.group](d[dd.name]) + ')' });
-					point.select('text')
-						.text(function(dd) {return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
-						// .attr('x', function(dd){ return (-mouse_x_buffer - this.getBBox().width) })
-						.attr('y', -point_radius*3.3)
-						.attr('x', function(dd){ return (x_position < chart_width - this.getBBox().width - mouse_x_buffer*2) ? mouse_x_buffer : (-mouse_x_buffer - this.getBBox().width) });
+					var d = data_val_at_mouse_x - d0.timestamp > d1.timestamp - data_val_at_mouse_x ? d1 : d0,
+							d3_points = d3.selectAll('.ST-point'), // Cache this selection
+							x_position = X(d); // From the data value we found by getting the one nearest the mouse_x position, figure out its exact x position so that we may put the point val at that X.
+
+					// Layout the point at the appropriate x and y coordinates in the svg
+					// Also grab some of its data and stash it in our mouseover object
+					d3_points.attr('transform', function(dd) { 
+						hover_data[dd.name] = {};
+						var y_data_val = d[dd.name],
+								y_coord = yScales[dd.group](y_data_val);
+						hover_data[dd.name].y = y_data_val;
+						return 'translate(' + x_position + ',' + y_coord + ')';
+					});
 				}
+				console.log(hover_data)
+
+
 			}
+
+			// function mousemove(d) {
+			// 	var that = this;
+			// 	var point_radius = 3,
+			// 			mouse_x_buffer = -point_radius;
+			// 	var m = d3.mouse(that)[0],
+			// 			x0 = xScale.invert(m),
+			// 			i = bisectDate(data, x0, 1),
+			// 			d0 = data[i - 1],
+			// 			d1 = data[i];
+			// 	if (d0 && d1){
+			// 		var d = x0 - d0.timestamp > d1.timestamp - x0 ? d1 : d0;
+			// 		var point = d3.selectAll('.ST-point'),
+			// 				x_position = X(d);
+			// 		point.attr('transform', function(dd) { return 'translate(' + x_position + ',' + yScales[dd.group](d[dd.name]) + ')' });
+			// 		point.select('text')
+			// 			.text(function(dd) {return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
+			// 			// .attr('x', function(dd){ return (-mouse_x_buffer - this.getBBox().width) })
+			// 			.attr('y', -point_radius*3.3)
+			// 			.attr('x', function(dd){ return (x_position < chart_width - this.getBBox().width - mouse_x_buffer*2) ? mouse_x_buffer : (-mouse_x_buffer - this.getBBox().width) });
+			// 	}
+			// }
 
 
 			function transformPromotionsIntoSpots(promos){
