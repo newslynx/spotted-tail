@@ -43,6 +43,8 @@ function spottedTail() {
 			promosMinDate,
 			eventsMaxDate,
 			promosMaxDate,
+			follow_line_g,
+			follow_line,
 			number_of_legend_ticks = 3,
 			color = d3.scale.category10(),
 			xScale = d3.time.scale(),
@@ -249,6 +251,16 @@ function spottedTail() {
 					.attr('height', chart_height)
 					.attr('transform', 'translate('+(-1*event_circle_radius + margin.left)+',0)')
 
+			// Add the follow line below everything
+			follow_line_g = svg.append('g')
+					.attr('id', 'ST-follow-line-container')
+					.style('display', 'none')
+					.attr('transform', 'translate('+margin.left+',0)');
+
+			follow_line = follow_line_g.append('line')
+						.classed('ST-follow-line', true)
+						.attr("y1", 0);
+
 			// Lines
 			var lineChartCtnr = svg.append('g')
 														.classed('ST-line-g', true)
@@ -260,9 +272,15 @@ function spottedTail() {
 					.attr('height', chart_height)
 					.attr('fill', 'none')
 					.attr('pointer-events', 'all')
-					.on('mouseover', function() {d3.selectAll('.ST-point').style('display', null); })
-					.on('mouseout', function() { d3.selectAll('.ST-point').style('display', 'none'); })
-					.on('mousemove', setHoverInfo)
+					.on('mouseover', function() { 
+						follow_line_g.style('display', null);
+						d3.selectAll('.ST-point').style('display', null); 
+					})
+					.on('mouseout', function() { 
+						follow_line_g.style('display', 'none');
+						d3.selectAll('.ST-point').style('display', 'none'); 
+					})
+					.on('mousemove', mousemove)
 
 			// line with clipping path, axes
 			lineChartCtnr.append('g').attr('class', 'ST-y ST-axis').attr('data-group','a');
@@ -292,6 +310,7 @@ function spottedTail() {
 					.attr('height', st_height)
 			ctnr.style.height = st_height;
 
+			follow_line.attr('y2', (parseInt(st_height) - chart_height_brush - 10) )
 
 			// Update the line path.
 			lineChartCtnr.selectAll('.ST-metric-line[data-group="a"]')
@@ -326,8 +345,9 @@ function spottedTail() {
 					.attr('d', function(d) { return lines['b'](d.values); })
 					.style('stroke', function(d) { return legend[d.name].color || color(d.name); });
 
-			// Dynamic interval calculation
-			// calcTimeInts()
+			// // Dynamic interval calculation
+			// calcTimeInts();
+
 			// And its xAxis
 			lineChartCtnr.select('.ST-x.ST-axis')
 					.attr('transform', 'translate(0,' + yScales['b'].range()[0] + ')') // This can be either yScale because they have the same range
@@ -588,11 +608,21 @@ function spottedTail() {
 				onBrush(timestamp_range_unoffset, brush.empty());
 			}
 
-			function setHoverInfo(d){
+			function mousemove(d){
 				var that = this,
 						mouse_coords = d3.mouse(that),
-						mouse_x = mouse_coords[0],
-						mouse_y = mouse_coords[1],
+						mouse_x = mouse_coords[0];
+				setHoverInfo.call(that, mouse_coords);
+
+				follow_line
+					.attr('x1', mouse_x)
+					.attr('x2', mouse_x);
+
+			}
+
+			function setHoverInfo(mouseCoords){
+				var mouse_x = mouseCoords[0],
+						mouse_y = mouseCoords[1],
 						data_val_at_mouse_x = xScale.invert(mouse_x),
 						idx_at_svg_x = bisectDate(data, data_val_at_mouse_x, 1),
 						d0 = data[idx_at_svg_x - 1],
