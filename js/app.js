@@ -22,7 +22,7 @@
 			level: 'tweet',
 			link: 'http://twitter.com/mhkeller',
 			text: 'mhk',
-			color: '#cf0'
+			color: '#0cf'
 		}
 	]
 
