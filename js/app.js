@@ -1,6 +1,6 @@
 (function(){
 
-	var timezone_offset = -4;
+	var timezone = 'US/Eastern';
 	var legend =	{
 		facebook: {service: 'Facebook', metric: 'likes', color: '#3B5998', group: 'a'},
 		twitter: {service: 'Twitter', metric: 'mentions', color: '#55ACEE', group: 'a'},
@@ -35,7 +35,7 @@
 			impact_tags_full: [
 				{
 					category: 'citation',
-					attribute: 'media',
+					level: 'media',
 					name: 'media citation',
 					color: '#c0f'
 				}
@@ -49,7 +49,7 @@
 			impact_tags_full: [
 				{
 					category: 'change',
-					attribute: 'media',
+					level: 'media',
 					name: 'media change',
 					color: '#0cf'
 				}
@@ -63,7 +63,7 @@
 			impact_tags_full: [
 				{
 					category: 'change',
-					attribute: 'media',
+					level: 'media',
 					name: 'media change',
 					color: '#f0c'
 				}
@@ -77,7 +77,7 @@
 			.legend(legend)
 			.events(events)
 			.promotions(promotions)
-			.timezoneOffset(timezone_offset)
+			.timezone(timezone)
 			.interpolate('step-after')
 			.onBrush(function(dateRange, empty){
 				console.log(dateRange, empty)

@@ -35,9 +35,11 @@ function spottedTail() {
 			spots,
 			promotions,
 			interpolate,
-			timezoneOffset,
+			timezone,
 			events,
 			onBrush,
+			eventsMinDate,
+			promosMinDate,
 			eventsMaxDate,
 			promosMaxDate,
 			number_of_legend_ticks = 3,
@@ -176,8 +178,12 @@ function spottedTail() {
 				.map(metrics);
 
 
+			// Get the initial mins and maxes based on the timestamp
 			var x_domain = d3.extent(data, function(d) { return d.timestamp; });
+			// And then throw some more candidates into the mix with promos and eventsMaxDates
 			x_domain[1] = d3.max([x_domain[1], promosMaxDate, eventsMaxDate]);
+			// Do the same for minimums in case events or promos happen before
+			x_domain[0] = d3.min([x_domain[0], promosMinDate, eventsMinDate]);
 
 			var y_max = {};
 			y_max['a'] = d3.max(metrics['a'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
@@ -470,7 +476,6 @@ function spottedTail() {
 
 			discrete_g.append('text')
 				.text(function(d){
-					console.log(d)
 					var pretty_date = new Date(d.timestamp).toLocaleTimeString().replace(/:[0-9][0-9] /, ' ').toLowerCase();
 					var level = d.level.replace(/-/g,' '),
 							pretty_level = level.charAt(0).toUpperCase() + level.slice(1);
@@ -570,12 +575,25 @@ function spottedTail() {
 						.attr('transform', function(d){
 							var width = xScale(d.timestamp[1]) - xScale(d.timestamp[0]) 
 							return 'translate('+width/2+','+(events_row_height*1.5)+')';
-						})
+						});
+
 				// calcTimeInts();
 				// Report this out to the app.js
-				var timestamp_range_unoffset  = setTimezoneOffset( xScale.domain(), true );
+				var timestamp_range_unoffset  = xScale.domain().map(function(bound){
+					return setTimezone(bound , null, null, 'Etc/UTC' ).unix()/1000;
+				});
 				onBrush(timestamp_range_unoffset, brush.empty());
 			}
+
+			// function setHoverInfo(d){
+			// 	var that = this,
+			// 			mouse_coords = d3.mouse(that),
+			// 			mouse_x = mouse_coords[0],
+			// 			mouse_y = mouse_coords[1];
+
+			// 	console.log(mouse_coords)
+
+			// }
 
 			function mousemove(d) {
 				var that = this;
@@ -613,7 +631,16 @@ function spottedTail() {
 					}
 				});
 
-				if (!promosMaxDate) { promosMaxDate = new Date(0) }
+				if (!promosMaxDate) { promosMaxDate = new Date(0); }
+
+				// Calc min of promos
+				promosMinDate = d3.min(promos_copy, function(d) { 
+					if (Array.isArray(d.timestamp)){
+						return d3.min(d.timestamp) || new Date();
+					} else {
+						return d.timestamp; 
+					}
+				});
 
 
 				promos_copy = promos_copy.map(function(promo){
@@ -651,6 +678,7 @@ function spottedTail() {
 				events_copy = parseDates(events_copy);
 
 				eventsMaxDate = d3.max(events_copy, function(d) { return d.timestamp; }) || new Date(0);
+				eventsMinDate = d3.min(events_copy, function(d) { return d.timestamp; }) || new Date();
 
 				var abbreved_names = {
 							achievement: 'achievem.'
@@ -678,10 +706,9 @@ function spottedTail() {
 							timestamp: evt.timestamp,
 							event_name: evt.name,
 							link: evt.link,
-							significance: evt.significance,
 							text: evt.text,
 							title: evt.title,
-							what_happened: evt.what_happened,
+							description: evt.description,
 							category: impactTagFull.category,
 							pretty_category: pretty_category,
 							level: impactTagFull.level,
@@ -725,23 +752,28 @@ function spottedTail() {
 
 	function parseDates(arr){
 		var converted = arr.map(function(d) {
-			var converted;
 
 			if (Array.isArray(d.timestamp)) { 
-				d.timestamp = d.timestamp.map(convert);
+				d.timestamp = d.timestamp.map(setTimezone);
 			} else { 
-				d.timestamp = convert(d.timestamp);
+				d.timestamp = setTimezone(d.timestamp);
 			}
 
 			return d;
 		});
 
-		function convert(timestamp){
-			timestamp = timestamp*1000;
-			return new Date(setTimezoneOffset(new Date(timestamp))*1000);
-		}
 		return converted;
 	}
+
+	function setTimezone(utcTimestamp, index, list, timezoneRegion){
+		var timezone_region = timezoneRegion || timezone;
+		
+		utcTimestamp = utcTimestamp*1000;
+		var utc_moment = moment(utcTimestamp),
+				user_timezone_moment = utc_moment.tz(timezone_region);
+
+		return user_timezone_moment;
+	}	
 
 	// The x-accessor for the path generator; xScale ∘ xValue.
 	function X(d) {
@@ -779,25 +811,6 @@ function spottedTail() {
 		}
 		return defaults;
 	}
-
-	function setTimezoneOffset(dateObj, unoffset){
-		var converted,
-				mode = 1;
-		if (unoffset) mode = -1;
-
-		if (Array.isArray(dateObj)){
-			converted = dateObj.map(convert);
-		} else {
-			converted = convert(dateObj)
-		}
-
-		function convert(dateObj){
-			var converted_time = dateObj.setHours(dateObj.getHours() + mode*timezoneOffset)/1000;
-			return converted_time;
-		}
-
-		return converted;
-	}	
 
 	chart.margin = function(__) {
 		if (!arguments.length) return margin;
@@ -850,9 +863,9 @@ function spottedTail() {
 		onBrush = __;
 		return chart;
 	}
-	chart.timezoneOffset = function(__){
-		if (!arguments.length) return timezoneOffset;
-		timezoneOffset = __;
+	chart.timezone = function(__){
+		if (!arguments.length) return timezone;
+		timezone = __;
 		return chart;
 	}
 
