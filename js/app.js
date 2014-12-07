@@ -56,15 +56,15 @@
 			],
 			related_links: []
 		},{
-			timestamp: 976739900,
+			timestamp: 972628700,
 			name: 'Jon Stewart talked about us',
-			impact_tag_categories: ['change'],
+			impact_tag_categories: ['citation'],
 			impact_tag_levels: ['media'],
 			impact_tags_full: [
 				{
-					category: 'change',
+					category: 'citation',
 					level: 'media',
-					name: 'media change',
+					name: 'media citation',
 					color: '#f0c'
 				}
 			],

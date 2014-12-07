@@ -597,9 +597,10 @@ function spottedTail() {
 						idx_at_svg_x = bisectDate(data, data_val_at_mouse_x, 1),
 						d0 = data[idx_at_svg_x - 1],
 						d1 = data[idx_at_svg_x],
-						hover_data = {};
+						hover_data = {},
+						pixel_window = 75;
 
-
+				// Stash the date our mouse is at
 				hover_data.moment = data_val_at_mouse_x;
 
 				// Get some data on the timeseries information
@@ -618,6 +619,26 @@ function spottedTail() {
 						return 'translate(' + x_position + ',' + y_coord + ')';
 					});
 				}
+
+				// Get the date for our other buckets of data in `spot_values`
+				hover_data.spots = [];
+				spot_values.forEach(function(spotValuesInCategory){
+					var category = spotValuesInCategory[0].category,
+						spot_values_within_window = spotValuesInCategory.filter(function(spotValue){
+							var x_position_of_spot = xScale(spotValue.timestamp);
+							return x_position_of_spot > (mouse_x - pixel_window) && x_position_of_spot < (mouse_x + pixel_window);
+						});
+
+					// console.log(spot_values_within_window)
+					var category_object;
+					if (spot_values_within_window.length){
+						category_object = {
+							key: category,
+							values: spot_values_within_window
+						}
+						hover_data.spots.push(category_object);
+					}
+				})
 				console.log(hover_data)
 
 
