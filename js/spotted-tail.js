@@ -621,6 +621,7 @@ function spottedTail() {
 					.attr('x1', mouse_x)
 					.attr('x2', mouse_x);
 
+				// Disable/enable hover display when hovering outside of chart range
 				var x_scale_range = xScale.range();
 				if (mouse_x > x_scale_range[0] && mouse_x < x_scale_range[1]){
 					activateHover();
