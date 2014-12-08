@@ -267,20 +267,14 @@ function spottedTail() {
 														.classed('ST-container', true)
 														.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 			// For mouseevents										 
-			lineChartCtnr.append('rect')
-					.attr('width', chart_width)
-					.attr('height', chart_height)
-					.attr('fill', 'none')
-					.attr('pointer-events', 'all')
-					.on('mouseover', function() { 
-						follow_line_g.style('display', null);
-						d3.selectAll('.ST-point').style('display', null); 
-					})
-					.on('mouseout', function() { 
-						follow_line_g.style('display', 'none');
-						d3.selectAll('.ST-point').style('display', 'none'); 
-					})
-					.on('mousemove', mousemove)
+			// // lineChartCtnr.append('rect')
+			// // 		.attr('width', chart_width)
+			// // 		.attr('height', chart_height)
+			// // 		.attr('fill', 'none')
+			// 		.attr('pointer-events', 'all')
+			svg.on('mouseover', activateHover)
+					.on('mouseout', deactivateHover)
+					.on('mousemove', mousemove);
 
 			// line with clipping path, axes
 			lineChartCtnr.append('g').attr('class', 'ST-y ST-axis').attr('data-group','a');
@@ -302,8 +296,7 @@ function spottedTail() {
 			var eventsCntnr  = svg.append('g')
 														.classed('ST-categories', true)
 														.classed('ST-container', true)
-														.attr('transform', 'translate(0,' + (chart_height + marginEvents.top + marginEvents.top_buffer) + ')');
-														// .attr('transform', 'translate(' + marginEvents.left + ',' + (chart_height + marginEvents.top + marginEvents.top_buffer) + ')');
+														.attr('transform', 'translate(0,' + (chart_height + marginEvents.top + marginEvents.top_buffer) + ')')
 
 			// Update the outer dimensions to the full dimensions including the margins.
 			svg .attr('width', dimensions.width)
@@ -608,20 +601,37 @@ function spottedTail() {
 				onBrush(timestamp_range_unoffset, brush.empty());
 			}
 
+			function activateHover() { 
+				follow_line_g.style('display', null);
+				d3.selectAll('.ST-point').style('display', null); 
+			}
+
+			function deactivateHover() { 
+				follow_line_g.style('display', 'none');
+				d3.selectAll('.ST-point').style('display', 'none'); 
+			}
+
 			function mousemove(d){
 				var that = this,
 						mouse_coords = d3.mouse(that),
-						mouse_x = mouse_coords[0];
+						mouse_x = mouse_coords[0] - margin.left;
 				setHoverInfo.call(that, mouse_coords);
 
 				follow_line
 					.attr('x1', mouse_x)
 					.attr('x2', mouse_x);
 
+				var x_scale_range = xScale.range();
+				if (mouse_x > x_scale_range[0] && mouse_x < x_scale_range[1]){
+					activateHover();
+				} else {
+					deactivateHover();
+				}
+
 			}
 
 			function setHoverInfo(mouseCoords){
-				var mouse_x = mouseCoords[0],
+				var mouse_x = mouseCoords[0] - margin.left,
 						mouse_y = mouseCoords[1],
 						data_val_at_mouse_x = xScale.invert(mouse_x),
 						idx_at_svg_x = bisectDate(data, data_val_at_mouse_x, 1),
@@ -669,7 +679,7 @@ function spottedTail() {
 						hover_data.spots.push(category_object);
 					}
 				})
-				console.log(hover_data)
+				// console.log(hover_data)
 
 
 			}
