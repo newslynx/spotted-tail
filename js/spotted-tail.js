@@ -272,8 +272,8 @@ function spottedTail() {
 			// // 		.attr('height', chart_height)
 			// // 		.attr('fill', 'none')
 			// 		.attr('pointer-events', 'all')
-			svg.on('mouseover', activateHover)
-					.on('mouseout', deactivateHover)
+			svg.on('mouseenter', activateHover)
+					.on('mouseleave', deactivateHover)
 					.on('mousemove', mousemove);
 
 			// line with clipping path, axes
@@ -613,13 +613,17 @@ function spottedTail() {
 
 			function mousemove(d){
 				var that = this,
-						mouse_coords = d3.mouse(that),
-						mouse_x = mouse_coords[0] - margin.left;
-				setHoverInfo.call(that, mouse_coords);
+						mouse_coords = d3.mouse(that);
+				mouse_coords[0] = mouse_coords[0] - margin.left;
 
-				follow_line
-					.attr('x1', mouse_x)
-					.attr('x2', mouse_x);
+				var hover_info = setHoverInfo.call(that, mouse_coords),
+						mouse_x = mouse_coords[0];
+
+				// highlightSpots.call(that, mouse_coords);
+				// console.log(hover_info)
+
+				follow_line .attr('x1', mouse_x)
+										.attr('x2', mouse_x);
 
 				// Disable/enable hover display when hovering outside of chart range
 				var x_scale_range = xScale.range();
@@ -631,8 +635,12 @@ function spottedTail() {
 
 			}
 
+			// function highlightSpots(mouseCoords){
+
+			// }
+
 			function setHoverInfo(mouseCoords){
-				var mouse_x = mouseCoords[0] - margin.left,
+				var mouse_x = mouseCoords[0],
 						mouse_y = mouseCoords[1],
 						data_val_at_mouse_x = xScale.invert(mouse_x),
 						idx_at_svg_x = bisectDate(data, data_val_at_mouse_x, 1),
@@ -663,6 +671,10 @@ function spottedTail() {
 
 				// Get the date for our other buckets of data in `spot_values`
 				hover_data.spots = [];
+				var points = d3.select('.ST-categories').selectAll('.ST-event-circle').data();
+				// TODO, instead of storying spot values, loop through the data bound dot his selection and alter the css of `this` to highlight spots in range
+				// Later on, nest bound data in selection as entries by category and add similarly to `category_object`.
+				console.log(points)
 				spot_values.forEach(function(spotValuesInCategory){
 					var category = spotValuesInCategory[0].category,
 						spot_values_within_window = spotValuesInCategory.filter(function(spotValue){
@@ -680,7 +692,7 @@ function spottedTail() {
 						hover_data.spots.push(category_object);
 					}
 				})
-				// console.log(hover_data)
+				return hover_data;
 
 
 			}
