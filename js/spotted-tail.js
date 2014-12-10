@@ -16,6 +16,7 @@ function spottedTail() {
 	]);
 
 	var first_run = true,
+			selection_canvas,
 			dimensions = {},
 			margin = {},
 			marginBrush = {},
@@ -33,7 +34,6 @@ function spottedTail() {
 			yValue,
 			legend,
 			spots,
-			// spot_values,
 			promotions,
 			interpolate,
 			timezone,
@@ -43,6 +43,7 @@ function spottedTail() {
 			promosMinDate,
 			eventsMaxDate,
 			promosMaxDate,
+			hover_window_container,
 			follow_line_g,
 			follow_line,
 			number_of_legend_ticks = 3,
@@ -64,7 +65,8 @@ function spottedTail() {
 				return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); 
 			},
 			// ppNumber = function(str) { return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); },
-			ppDate = function(dObj) { return dObj.toDateString() };
+			ppDate = function(dObj) { return dObj.toDateString() },
+			addCommas = d3.format(',');
 
 			yScales['a'] = d3.scale.linear();
 			yScalesBrush['a'] = d3.scale.linear();
@@ -234,7 +236,8 @@ function spottedTail() {
 					.range([0, chart_width_brush]);
 
 			// Append the svg element
-			var svg = d3.select(this).append('svg').attr('class', 'ST-canvas');
+			selection_canvas = d3.select(this);
+			var svg = selection_canvas.append('svg').attr('class', 'ST-canvas');
 
 			// Clipping path for chart
 			svg.append('defs').append('clipPath')
@@ -570,6 +573,33 @@ function spottedTail() {
 						.style('fill', function(d) { return d.color; }); // Get the color of the first impact tag
 						// .on('mouseover', function(d){ console.log(d) });
 
+			hover_window_container = selection_canvas.append('div')
+				.attr('id', 'ST-hover-window-container');
+
+			hover_window_container.append('div')
+				.classed('ST-hover-timestamp', true);
+
+			// hover_window_container.append('div')
+			// 	.classed('ST-hover-facebook', true);
+			// 	.append('div')
+			// 		.classed('ST-hover-section-title', true)
+			// 		.attr('data-which', 'facebook')
+			// 		.html('Facebook shares');
+
+			// hover_window_container.append('div')
+			// 	.classed('ST-hover-twitter', true)
+			// 	.append('div')
+			// 		.classed('ST-hover-section-title', true)
+			// 		.attr('data-which', 'twitter')
+			// 		.html('Twitter mentions');
+
+			// hover_window_container.append('div')
+			// 	.classed('ST-hover-spots-container', true)
+			// 	.append('div')
+			// 		.classed('ST-hover-section-title', true)
+			// 		.attr('data-which', 'events')
+			// 		.html('Events');
+
 			// TODO, better updating
 			first_run = false;
 
@@ -604,11 +634,68 @@ function spottedTail() {
 			function activateHover() { 
 				follow_line_g.style('display', null);
 				d3.selectAll('.ST-point').style('display', null); 
+				hover_window_container.style('display', null);
 			}
 
 			function deactivateHover() { 
+				// TODO clean up style of using cached selections vs reselecting
 				follow_line_g.style('display', 'none');
 				d3.selectAll('.ST-point').style('display', 'none'); 
+				d3.selectAll('.ST-event-circle').classed('ST-highlighted', false); 
+				hover_window_container.style('display', 'none');
+			}
+
+			function populateHoverWindow(hoverInfo){
+				if (hoverInfo.metrics){
+					hover_window_container.datum(hoverInfo);
+
+					hover_window_container.select('.ST-hover-timestamp').html(function(d){
+						return d.moment.format('"dddd, MMM D \'YY, h:mm a"');
+					});
+
+					var metrics = hover_window_container.selectAll('.ST-hover-metric-container').data(function(d){ return d.metrics; }),
+							_metrics = metrics.enter();
+
+					// Update
+					metrics.select('.ST-hover-swatch')
+						.style('background-color', function(d){
+							return d.color;
+						});
+
+					metrics.select('.ST-hover-section-label')
+						.html(function(d){
+							return d.key.charAt(0).toUpperCase() + d.key.slice(1);
+						})
+
+					metrics.select('.ST-hover-section-value')
+						.html(function(d){
+							return addCommas(d.value);
+						})
+
+					// Enter new
+					// Really only happens the first time
+					var metric_container = _metrics.append('div')
+						.classed('ST-hover-metric-container', true);
+
+					metric_container.append('div')
+						.classed('ST-hover-swatch', true)
+						.style('background-color', function(d){
+							return d.color;
+						});
+
+					metric_container.append('div')
+						.classed('ST-hover-section-label', true)
+						.html(function(d){
+							return d.key.charAt(0).toUpperCase() + d.key.slice(1);
+						});
+
+					metric_container.append('div')
+						.classed('ST-hover-section-value', true)
+						.html(function(d){
+							return addCommas(d.value);
+						});
+				}
+
 			}
 
 			function mousemove(d){
@@ -616,14 +703,13 @@ function spottedTail() {
 						mouse_coords = d3.mouse(that);
 				mouse_coords[0] = mouse_coords[0] - margin.left;
 
-				var hover_info = setHoverInfo.call(that, mouse_coords),
+				var hover_info = setHoverInfoHighlightEvents.call(that, mouse_coords),
 						mouse_x = mouse_coords[0];
-
-				// highlightSpots.call(that, mouse_coords);
-				// console.log(hover_info)
 
 				follow_line .attr('x1', mouse_x)
 										.attr('x2', mouse_x);
+
+				populateHoverWindow(hover_info);
 
 				// Disable/enable hover display when hovering outside of chart range
 				var x_scale_range = xScale.range();
@@ -639,7 +725,7 @@ function spottedTail() {
 
 			// }
 
-			function setHoverInfo(mouseCoords){
+			function setHoverInfoHighlightEvents(mouseCoords){
 				var mouse_x = mouseCoords[0],
 						mouse_y = mouseCoords[1],
 						data_val_at_mouse_x = xScale.invert(mouse_x),
@@ -650,7 +736,7 @@ function spottedTail() {
 						pixel_window = 75;
 
 				// Stash the date our mouse is at
-				hover_data.moment = data_val_at_mouse_x;
+				hover_data.moment = moment(data_val_at_mouse_x);
 
 				// Get some data on the timeseries information
 				if (d0 && d1){
@@ -660,13 +746,21 @@ function spottedTail() {
 
 					// Layout the point at the appropriate x and y coordinates in the svg
 					// Also grab some of its data and stash it in our mouseover object
+					hover_data.metrics = [];
 					d3_points.attr('transform', function(dd) { 
-						hover_data[dd.name] = {};
+						var obj = {};
 						var y_data_val = d[dd.name],
 								y_coord = yScales[dd.group](y_data_val);
-						hover_data[dd.name].y = y_data_val;
+
+						obj.key = dd.name;
+						obj.value = +y_data_val;
+						obj.color = legend[dd.name].color;
+						hover_data.metrics.push(obj);
 						return 'translate(' + x_position + ',' + y_coord + ')';
 					});
+					hover_data.metrics.sort(function(a,b){
+						return d3.descending(a.value, b.value);
+					})
 				}
 
 				// Get the date for our other buckets of data in `spot_values`
@@ -684,8 +778,6 @@ function spottedTail() {
 							spots_within_range.push(d);
 							d3_this.classed('ST-highlighted', true);
 						}
-
-
 					});
 
 					// nest this object under categories
@@ -693,27 +785,6 @@ function spottedTail() {
 																.key(function(d){ return d.category })
 																.entries(spots_within_range);
 
-					console.log(hover_data.spots)
-				// TODO, instead of storying spot values, loop through the data bound dot his selection and alter the css of `this` to highlight spots in range
-				// Later on, nest bound data in selection as entries by category and add similarly to `category_object`.
-				// console.log(points)
-				// spot_values.forEach(function(spotValuesInCategory){
-				// 	var category = spotValuesInCategory[0].category,
-				// 		spot_values_within_window = spotValuesInCategory.filter(function(spotValue){
-				// 			var x_position_of_spot = xScale(spotValue.timestamp);
-				// 			return ;
-				// 		});
-
-				// 	// console.log(spot_values_within_window)
-				// 	var category_object;
-				// 	if (spot_values_within_window.length){
-				// 		category_object = {
-				// 			key: category,
-				// 			values: spot_values_within_window
-				// 		}
-				// 		hover_data.spots.push(category_object);
-				// 	}
-				// })
 				return hover_data;
 
 

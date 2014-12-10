@@ -43,7 +43,7 @@
 			related_links: []
 		},{
 			timestamp: 976739900,
-			name: 'Jon Stewart talked about us',
+			name: 'Ralph Lauren talked about us',
 			impact_tag_categories: ['change'],
 			impact_tag_levels: ['media'],
 			impact_tags_full: [
@@ -56,8 +56,8 @@
 			],
 			related_links: []
 		},{
-			timestamp: 972628700,
-			name: 'Jon Stewart talked about us',
+			timestamp: 971628700,
+			name: 'A dog talked about us',
 			impact_tag_categories: ['citation'],
 			impact_tag_levels: ['media'],
 			impact_tags_full: [
