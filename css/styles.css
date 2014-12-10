@@ -51,6 +51,8 @@
 }
 .ST-canvas .ST-point circle {
   fill: #000;
+  stroke-width: 0.5px;
+  stroke: #fff;
 }
 .ST-canvas .ST-point text {
   font-size: 1.2em;

@@ -66,7 +66,10 @@ function spottedTail() {
 			},
 			// ppNumber = function(str) { return str.replace(/\B(?=(\d{3})+(?!\d))/g, ","); },
 			ppDate = function(dObj) { return dObj.toDateString() },
-			addCommas = d3.format(',');
+			addCommas = d3.format(','),
+			toTitleCase = function(str){
+				return str.charAt(0).toUpperCase() + str.slice(1);
+			}
 
 			yScales['a'] = d3.scale.linear();
 			yScalesBrush['a'] = d3.scale.linear();
@@ -411,12 +414,12 @@ function spottedTail() {
 
 			// Add the circle
 			focus_container.append('circle')
-						.attr('r', 3);
+						.attr('r', 4);
 
 			// And text components
-			focus_container
-					.append('text')
-						.attr('dy', '.35em');
+			// focus_container
+			// 		.append('text')
+			// 			.attr('dy', '.35em');
 
 			// Events container, let's use `_` suffix to mean the enter selection
 			var eventTimelineCntnr_ = eventsCntnr.selectAll('.ST-category-timeline')
@@ -579,27 +582,6 @@ function spottedTail() {
 			hover_window_container.append('div')
 				.classed('ST-hover-timestamp', true);
 
-			// hover_window_container.append('div')
-			// 	.classed('ST-hover-facebook', true);
-			// 	.append('div')
-			// 		.classed('ST-hover-section-title', true)
-			// 		.attr('data-which', 'facebook')
-			// 		.html('Facebook shares');
-
-			// hover_window_container.append('div')
-			// 	.classed('ST-hover-twitter', true)
-			// 	.append('div')
-			// 		.classed('ST-hover-section-title', true)
-			// 		.attr('data-which', 'twitter')
-			// 		.html('Twitter mentions');
-
-			// hover_window_container.append('div')
-			// 	.classed('ST-hover-spots-container', true)
-			// 	.append('div')
-			// 		.classed('ST-hover-section-title', true)
-			// 		.attr('data-which', 'events')
-			// 		.html('Events');
-
 			// TODO, better updating
 			first_run = false;
 
@@ -653,24 +635,9 @@ function spottedTail() {
 						return d.moment.format('"dddd, MMM D \'YY, h:mm a"');
 					});
 
+					// Metrics
 					var metrics = hover_window_container.selectAll('.ST-hover-metric-container').data(function(d){ return d.metrics; }),
 							_metrics = metrics.enter();
-
-					// Update
-					metrics.select('.ST-hover-swatch')
-						.style('background-color', function(d){
-							return d.color;
-						});
-
-					metrics.select('.ST-hover-section-label')
-						.html(function(d){
-							return d.key.charAt(0).toUpperCase() + d.key.slice(1);
-						})
-
-					metrics.select('.ST-hover-section-value')
-						.html(function(d){
-							return addCommas(d.value);
-						})
 
 					// Enter new
 					// Really only happens the first time
@@ -686,7 +653,7 @@ function spottedTail() {
 					metric_container.append('div')
 						.classed('ST-hover-section-label', true)
 						.html(function(d){
-							return d.key.charAt(0).toUpperCase() + d.key.slice(1);
+							return toTitleCase(d.key);
 						});
 
 					metric_container.append('div')
@@ -694,6 +661,50 @@ function spottedTail() {
 						.html(function(d){
 							return addCommas(d.value);
 						});
+
+					// Update
+					metrics.select('.ST-hover-swatch')
+						.style('background-color', function(d){
+							return d.color;
+						});
+
+					metrics.select('.ST-hover-section-label')
+						.html(function(d){
+							return toTitleCase(d.key);
+						})
+
+					metrics.select('.ST-hover-section-value')
+						.html(function(d){
+							return addCommas(d.value);
+						})
+
+					// Spots
+					// Do some data constancty stuff with the second arg to `.data()`
+					var spots_container = hover_window_container.selectAll('.ST-event-info-container').data(function(d){ return d.spots; }, function(d) { return d.key; }),
+							_spots_container = spots_container.enter(),
+							spots_container_ = spots_container.exit();
+
+					// Remove old
+					spots_container_.remove();
+
+					// Enter new
+					var spot_container = _spots_container.append('div')
+						.classed('ST-event-info-container', true);
+
+					spot_container.append('div')
+						.classed('.ST-hover-event-info-category-label', true)
+						.html(function(d){
+							return d.key;
+						});
+
+					// TODO another data join with the `values` list and populate with data
+
+					// Update
+					spots_container.select('.ST-hover-event-info-category-label')
+						.html(function(d){
+							return d.key;
+						});
+
 				}
 
 			}
@@ -720,10 +731,6 @@ function spottedTail() {
 				}
 
 			}
-
-			// function highlightSpots(mouseCoords){
-
-			// }
 
 			function setHoverInfoHighlightEvents(mouseCoords){
 				var mouse_x = mouseCoords[0],
@@ -758,6 +765,12 @@ function spottedTail() {
 						hover_data.metrics.push(obj);
 						return 'translate(' + x_position + ',' + y_coord + ')';
 					});
+
+					d3_points.select('circle')
+						.style('fill', function(dd){
+							return legend[dd.name].color;
+						})
+
 					hover_data.metrics.sort(function(a,b){
 						return d3.descending(a.value, b.value);
 					})
