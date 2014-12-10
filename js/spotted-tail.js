@@ -33,7 +33,7 @@ function spottedTail() {
 			yValue,
 			legend,
 			spots,
-			spot_values,
+			// spot_values,
 			promotions,
 			interpolate,
 			timezone,
@@ -98,9 +98,9 @@ function spottedTail() {
 				events = transformEventsIntoSpots(events);
 				promotions = transformPromotionsIntoSpots(promotions);
 				spots = promotions.concat(events);
-				spot_values = spots.map(function(sp){
-					return sp.values.discrete;
-				});
+				// spot_values = spots.map(function(sp){
+				// 	return sp.values.discrete;
+				// });
 			}
 			var number_of_event_rows = spots.length;
 
@@ -670,28 +670,50 @@ function spottedTail() {
 				}
 
 				// Get the date for our other buckets of data in `spot_values`
-				hover_data.spots = [];
-				var points = d3.select('.ST-categories').selectAll('.ST-event-circle').data();
+				var spots_within_range = [];
+				d3.select('.ST-categories')
+					.selectAll('.ST-event-circle')
+					.each(function(d){
+						var d3_this = d3.select(this),
+								category = d.category,
+								x_position_of_spot = xScale(d.timestamp),
+								within_range = x_position_of_spot > (mouse_x - pixel_window) && x_position_of_spot < (mouse_x + pixel_window);
+
+						d3_this.classed('ST-highlighted', false);
+						if (within_range){
+							spots_within_range.push(d);
+							d3_this.classed('ST-highlighted', true);
+						}
+
+
+					});
+
+					// nest this object under categories
+					hover_data.spots = d3.nest()
+																.key(function(d){ return d.category })
+																.entries(spots_within_range);
+
+					console.log(hover_data.spots)
 				// TODO, instead of storying spot values, loop through the data bound dot his selection and alter the css of `this` to highlight spots in range
 				// Later on, nest bound data in selection as entries by category and add similarly to `category_object`.
-				console.log(points)
-				spot_values.forEach(function(spotValuesInCategory){
-					var category = spotValuesInCategory[0].category,
-						spot_values_within_window = spotValuesInCategory.filter(function(spotValue){
-							var x_position_of_spot = xScale(spotValue.timestamp);
-							return x_position_of_spot > (mouse_x - pixel_window) && x_position_of_spot < (mouse_x + pixel_window);
-						});
+				// console.log(points)
+				// spot_values.forEach(function(spotValuesInCategory){
+				// 	var category = spotValuesInCategory[0].category,
+				// 		spot_values_within_window = spotValuesInCategory.filter(function(spotValue){
+				// 			var x_position_of_spot = xScale(spotValue.timestamp);
+				// 			return ;
+				// 		});
 
-					// console.log(spot_values_within_window)
-					var category_object;
-					if (spot_values_within_window.length){
-						category_object = {
-							key: category,
-							values: spot_values_within_window
-						}
-						hover_data.spots.push(category_object);
-					}
-				})
+				// 	// console.log(spot_values_within_window)
+				// 	var category_object;
+				// 	if (spot_values_within_window.length){
+				// 		category_object = {
+				// 			key: category,
+				// 			values: spot_values_within_window
+				// 		}
+				// 		hover_data.spots.push(category_object);
+				// 	}
+				// })
 				return hover_data;
 
 

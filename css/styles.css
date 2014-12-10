@@ -95,6 +95,9 @@
   stroke: #fff;
   fill-opacity: 0.7;
 }
+.ST-event-circle.ST-highlighted {
+  stroke: #000;
+}
 .ST-event-rect {
   fill-opacity: 0.5;
 }
