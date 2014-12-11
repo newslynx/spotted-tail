@@ -70,7 +70,7 @@ function spottedTail() {
 			addCommas = d3.format(','),
 			toTitleCase = function(str){
 				str = str.charAt(0).toUpperCase() + str.slice(1)
-				return str.replace(/_/g, ' ');
+				return str.replace(/_/g, ' ').replace(/-/g, ' ');
 			}
 
 			yScales['a'] = d3.scale.linear();
