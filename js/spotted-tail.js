@@ -293,7 +293,10 @@ function spottedTail() {
 														.classed('ST-brush', true)
 														.classed('ST-container', true)
 														.attr('transform', 'translate(' + marginBrush.left + ',' + (chart_height_full +marginEvents.top + marginEvents.top_buffer+ events_row_height*number_of_event_rows ) + ')')
-														.on('mouseover', hideHoverWindow)
+														.on('mouseover', function(){
+															hideHoverWindow();
+															but_seriously_hide = true;
+														})
 														.on('mouseout', function(){
 															but_seriously_hide = false;
 														})
@@ -638,7 +641,6 @@ function spottedTail() {
 			}
 
 			function hideHoverWindow(){
-				but_seriously_hide = true;
 				hover_window_container.style('display', 'none');
 			}
 
@@ -814,7 +816,8 @@ function spottedTail() {
 				mouse_coords[0] = mouse_coords[0] - margin.left;
 
 				var hover_info = setHoverInfoHighlightEvents.call(that, mouse_coords),
-						mouse_x = mouse_coords[0];
+						mouse_x = mouse_coords[0],
+						mouse_y = mouse_coords[1];
 
 				follow_line .attr('x1', mouse_x)
 										.attr('x2', mouse_x);
@@ -829,7 +832,20 @@ function spottedTail() {
 					deactivateHover();
 				}
 
+				var hover_width = hover_window_container.node().offsetWidth,
+						hover_padding = 30;
 
+				var hover_x;
+				if (mouse_x - hover_width + hover_padding > this.getBoundingClientRect().left){
+					hover_x = mouse_x - hover_width + hover_padding;
+				} else {
+					hover_x = mouse_x + hover_padding*4;
+				}
+
+
+				hover_window_container
+					.style('top', mouse_y+'px')
+					.style('left', hover_x+'px');
 			}
 
 			function setHoverInfoHighlightEvents(mouseCoords){

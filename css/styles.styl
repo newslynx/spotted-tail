@@ -4,6 +4,7 @@
 	position relative
 	width 100%
 	min-height 200px
+	box-sizing border-box
 
 .ST-canvas 
 	font 10px sans-serif
@@ -107,7 +108,12 @@
 	font-family Helvetica, sans-serif
 	width 300px
 	font-size 13px
-	background-color #fff
+	background-color rgba(255,255,255,.75)
+	border 1px solid #ccc
+	padding 10px
+	box-sizing border-box
+	border-radius 3px
+	pointer-events none
 .ST-hover-swatch,
 .ST-hover-section-label,
 .ST-hover-event-info-item-text,
