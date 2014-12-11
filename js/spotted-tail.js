@@ -500,7 +500,7 @@ function spottedTail() {
 				.text(function(d){
 					var pretty_date = new Date(d.timestamp).toLocaleTimeString().replace(/:[0-9][0-9] /, ' ').toLowerCase();
 					var level = d.level.replace(/-/g,' '),
-							pretty_level = level.charAt(0).toUpperCase() + level.slice(1);
+							pretty_level = toTitleCase(level);
 					return pretty_date + ' - ' + pretty_level;
 				})
 				.attr('text-anchor', 'middle')
@@ -624,7 +624,7 @@ function spottedTail() {
 				follow_line_g.style('display', 'none');
 				d3.selectAll('.ST-point').style('display', 'none'); 
 				d3.selectAll('.ST-event-circle').classed('ST-highlighted', false); 
-				hover_window_container.style('display', 'none');
+				// hover_window_container.style('display', 'none');
 			}
 
 			function populateHoverWindow(hoverInfo){
@@ -632,7 +632,7 @@ function spottedTail() {
 					hover_window_container.datum(hoverInfo);
 
 					hover_window_container.select('.ST-hover-timestamp').html(function(d){
-						return d.moment.format('"dddd, MMM D \'YY, h:mm a"');
+						return d.moment.format('dddd, MMM D \'YY, h:mm a');
 					});
 
 					// Metrics
@@ -680,7 +680,7 @@ function spottedTail() {
 
 					// Spots
 					// Do some data constancty stuff with the second arg to `.data()`
-					var spots_container = hover_window_container.selectAll('.ST-event-info-container').data(function(d){ return d.spots; }, function(d) { return d.key; }),
+					var spots_container = hover_window_container.selectAll('.ST-hover-event-info-category-container').data(function(d){ return d.spots; }, function(d) { return d.key; }),
 							_spots_container = spots_container.enter(),
 							spots_container_ = spots_container.exit();
 
@@ -689,21 +689,41 @@ function spottedTail() {
 
 					// Enter new
 					var spot_container = _spots_container.append('div')
-						.classed('ST-event-info-container', true);
+						.classed('ST-hover-event-info-category-container', true);
 
 					spot_container.append('div')
 						.classed('.ST-hover-event-info-category-label', true)
 						.html(function(d){
-							return d.key;
+							return toTitleCase(d.key);
 						});
-
-					// TODO another data join with the `values` list and populate with data
 
 					// Update
 					spots_container.select('.ST-hover-event-info-category-label')
 						.html(function(d){
 							return d.key;
 						});
+
+
+					var event_item = spot_container.selectAll('.ST-hover-event-info-item').data(function(d){ return d.values; }, function(d) { return d.key }),
+							_event_item = event_item.enter(),
+							event_item_ = event_item.exit();
+
+					// Enter new
+					_event_item.append('div')
+						.classed('ST-hover-event-info-item', true)
+						.html(function(d){
+							var text = toTitleCase(d.level);
+							// `event_name` doesn't exist on promotion elements because, simply, they aren't named events.
+							// We could possibly add more data to these promotion events at a later date
+							if (d.event_name){
+								text += ': ' + d.event_name
+							}
+							return text;
+						})
+
+					// Kill exiting
+					event_item_.remove();
+
 
 				}
 
@@ -857,6 +877,7 @@ function spottedTail() {
 						type = 'continuous';
 					}
 					promo.type = type;
+					promo.pretty_level = toTitleCase(promo.level);
 					return promo;
 				});
 
@@ -907,7 +928,7 @@ function spottedTail() {
 
 						if (abbreved_names[category]) { pretty_category = abbreved_names[category]; }
 
-						pretty_category = pretty_category.charAt(0).toUpperCase() + pretty_category.slice(1);
+						pretty_category = toTitleCase(pretty_category);
 
 
 						var spot = {
