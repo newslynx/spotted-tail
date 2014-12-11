@@ -82,7 +82,8 @@
 .ST-event-circle
 	stroke #fff
 	fill-opacity .7
-.ST-event-circle.ST-highlighted
+.ST-event-circle.ST-highlighted,
+.ST-event-rect.ST-highlighted
 	stroke #000
 .ST-event-rect
 	fill-opacity .5
@@ -109,7 +110,7 @@
 	background-color #fff
 .ST-hover-swatch,
 .ST-hover-section-label,
-.ST-hover-event-info-item,
+.ST-hover-event-info-item-text,
 .ST-hover-section-value
 	display inline-block
 	vertical-align top
@@ -130,7 +131,11 @@
 	margin-bottom 5px
 .ST-hover-event-info-timestamp
 	font-size .9em
+	font-style italic
 	margin 5px 0 3px 0
+	
+.ST-hover-event-info-item
+	margin-bottom 5px
 		
 .ST-hover-event-info-timestamp.ST-highlighted
 	span

@@ -97,7 +97,8 @@
   stroke: #fff;
   fill-opacity: 0.7;
 }
-.ST-event-circle.ST-highlighted {
+.ST-event-circle.ST-highlighted,
+.ST-event-rect.ST-highlighted {
   stroke: #000;
 }
 .ST-event-rect {
@@ -126,7 +127,7 @@
 }
 .ST-hover-swatch,
 .ST-hover-section-label,
-.ST-hover-event-info-item,
+.ST-hover-event-info-item-text,
 .ST-hover-section-value {
   display: inline-block;
   vertical-align: top;
@@ -151,7 +152,11 @@
 }
 .ST-hover-event-info-timestamp {
   font-size: 0.9em;
+  font-style: italic;
   margin: 5px 0 3px 0;
+}
+.ST-hover-event-info-item {
+  margin-bottom: 5px;
 }
 .ST-hover-event-info-timestamp.ST-highlighted span {
   padding: 2px 5px;

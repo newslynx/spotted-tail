@@ -44,6 +44,7 @@ function spottedTail() {
 			eventsMaxDate,
 			promosMaxDate,
 			hover_window_container,
+			but_seriously_hide,
 			follow_line_g,
 			follow_line,
 			number_of_legend_ticks = 3,
@@ -292,6 +293,10 @@ function spottedTail() {
 														.classed('ST-brush', true)
 														.classed('ST-container', true)
 														.attr('transform', 'translate(' + marginBrush.left + ',' + (chart_height_full +marginEvents.top + marginEvents.top_buffer+ events_row_height*number_of_event_rows ) + ')')
+														.on('mouseover', hideHoverWindow)
+														.on('mouseout', function(){
+															but_seriously_hide = false;
+														})
 
 			// line, brusher, axes
 			// brushCtnr.append('path').attr('class','metric-line');
@@ -593,17 +598,7 @@ function spottedTail() {
 
 			function highlightEvent(d){
 				var uid = d.uid;
-				// console.log(uid,d3.select('.ST-hover-event-info-timestamp[data-which="'+uid+'"]').classed('ST-highlighted'))
 				d3.select('.ST-hover-event-info-timestamp[data-which="'+uid+'"]').classed('ST-highlighted', true);
-				// var x_offset = (margin.left + xScale(d.timestamp)),
-				// 		time = d.timestamp.format('ddd, MMM D \'YY, h:mm a'),
-				// 		pretty_level = toTitleCase(d.level);
-
-				// console.log(x_offset);
-
-				// d3.select('#ST-tooltip')
-				// 	.html(time + '—' + pretty_level)
-				// 	.style('display', null);
 			}
 
 			function brushed(d) {
@@ -637,7 +632,14 @@ function spottedTail() {
 			function activateHover() { 
 				follow_line_g.style('display', null);
 				d3.selectAll('.ST-point').style('display', null); 
-				hover_window_container.style('display', null);
+				if (!but_seriously_hide){
+					hover_window_container.style('display', null);
+				}
+			}
+
+			function hideHoverWindow(){
+				but_seriously_hide = true;
+				hover_window_container.style('display', 'none');
 			}
 
 			function deactivateHover() { 
@@ -645,7 +647,8 @@ function spottedTail() {
 				follow_line_g.style('display', 'none');
 				d3.selectAll('.ST-point').style('display', 'none'); 
 				d3.selectAll('.ST-event-circle').classed('ST-highlighted', false); 
-				// hover_window_container.style('display', 'none');
+				d3.selectAll('.ST-event-rect').classed('ST-highlighted', false); 
+				hideHoverWindow();
 			}
 
 			function populateHoverWindow(hoverInfo){
@@ -701,7 +704,7 @@ function spottedTail() {
 
 					// Spots
 					// Do some data constancty stuff with the second arg to `.data()`
-					var spots_container = hover_window_container.selectAll('.ST-hover-event-info-category-container').data(function(d){ return d.spots; }, function(d) { return d.key; }),
+					var spots_container = hover_window_container.selectAll('.ST-hover-event-info-category-container').data(function(d){ return d.spots; }, function(d) { return _.pluck(d.values, 'uid').join(); }),
 							_spots_container = spots_container.enter(),
 							spots_container_ = spots_container.exit();
 
@@ -725,7 +728,7 @@ function spottedTail() {
 						});
 
 
-					var event_item = spot_container.selectAll('.ST-hover-event-info-item').data(function(d){ return d.values; }, function(d) { return d.key }),
+					var event_item = spot_container.selectAll('.ST-hover-event-info-item').data(function(d){ return d.values; }, function(d) { return d.uid }),
 							_event_item = event_item.enter(),
 							event_item_ = event_item.exit();
 
@@ -733,23 +736,32 @@ function spottedTail() {
 					event_item_.remove();
 
 					// Enter new
-					_event_item.append('div')
+					var event_item_container = _event_item.append('div')
+						.classed('ST-hover-event-info-item', true);
+
+					event_item_container.append('div')
 						.classed('ST-hover-event-info-timestamp', true)
 						.attr('data-which', function(d){
 							return d.uid;
 						})
 						.html(function(d){
-							return '<span>' + d.timestamp.format('M/D, h:mma') + '</span>';
+							var timestamp;
+							if (!Array.isArray(d.timestamp)){
+								timestamp = d.timestamp.format('M/D, h:mma')
+							} else {
+								timestamp = d.timestamp[0].format('M/D, h:mma') + ' to ' + d.timestamp[1].format('M/D, h:mma')
+							}
+							return '<span>' + timestamp + '</span>';
 						});
 
-					_event_item.append('div')
+					event_item_container.append('div')
 						.classed('ST-hover-swatch', true)
 						.style('background-color', function(d){
 							return d.color;
 						});
 
-					_event_item.append('div')
-						.classed('ST-hover-event-info-item', true)
+					event_item_container.append('div')
+						.classed('ST-hover-event-info-item-text', true)
 						.html(function(d){
 							var text = toTitleCase(d.level);
 							// `event_name` doesn't exist on promotion elements because, simply, they aren't named events.
@@ -763,7 +775,13 @@ function spottedTail() {
 					// Update
 					event_item.select('.ST-hover-event-info-timestamp')
 						.html(function(d){
-							return '<span>' + d.timestamp.format('M/D, h:mma') + '</span>';
+							var timestamp;
+							if (!Array.isArray(d.timestamp)){
+								timestamp = d.timestamp.format('M/D, h:mma')
+							} else {
+								timestamp = d.timestamp[0].format('M/D, h:mma') + ' to ' + d.timestamp[1].format('M/D, h:mma')
+							}
+							return '<span>' + timestamp + '</span>';
 						});
 
 					event_item.select('.ST-hover-swatch')
@@ -771,7 +789,7 @@ function spottedTail() {
 							return d.color;
 						});
 
-					event_item.select('.ST-hover-event-info-item')
+					event_item.select('.ST-hover-event-info-item-text')
 						.html(function(d){
 							var text = toTitleCase(d.level);
 							// `event_name` doesn't exist on promotion elements because, simply, they aren't named events.
@@ -860,8 +878,26 @@ function spottedTail() {
 
 				// Get the date for our other buckets of data in `spot_values`
 				var spots_within_range = [];
-				d3.select('.ST-categories')
-					.selectAll('.ST-event-circle')
+				var categtory_selection = d3.select('.ST-categories');
+
+				// Get continuous elements in range
+				categtory_selection.selectAll('.ST-event-rect')
+					.each(function(d){
+						var d3_this = d3.select(this),
+								begin_x = xScale(d.timestamp[0]),
+								end_x   = xScale(d.timestamp[1]),
+								within_range = mouse_x > begin_x && mouse_x < end_x;
+
+						d3_this.classed('ST-highlighted', false);
+						if (within_range){
+							// d.type = 'continuous';
+							spots_within_range.push(d);
+							d3_this.classed('ST-highlighted', true);
+						}
+
+					})
+
+				categtory_selection.selectAll('.ST-event-circle')
 					.each(function(d){
 						var d3_this = d3.select(this),
 								category = d.category,
@@ -870,15 +906,18 @@ function spottedTail() {
 
 						d3_this.classed('ST-highlighted', false);
 						if (within_range){
+							// d.type = 'discrete';
 							spots_within_range.push(d);
 							d3_this.classed('ST-highlighted', true);
 						}
 					});
 
-					// nest this object under categories
-					hover_data.spots = d3.nest()
-																.key(function(d){ return d.category })
-																.entries(spots_within_range);
+
+				// nest this object under categories
+				hover_data.spots = d3.nest()
+															.key(function(d){ return d.category })
+															// .key(function(d){ return d.type })
+															.entries(spots_within_range);
 
 				return hover_data;
 
