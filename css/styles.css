@@ -126,6 +126,7 @@
 }
 .ST-hover-swatch,
 .ST-hover-section-label,
+.ST-hover-event-info-item,
 .ST-hover-section-value {
   display: inline-block;
   vertical-align: top;
@@ -133,8 +134,26 @@
 .ST-hover-swatch {
   width: 8px;
   height: 8px;
+  margin-right: 5px;
 }
 .ST-hover-section-label {
   width: 75px;
-  margin-left: 5px;
+}
+.ST-hover-event-info-category-label {
+  text-transform: uppercase;
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-top: 10px;
+  margin-bottom: 2px;
+}
+.ST-hover-timestamp {
+  margin-bottom: 5px;
+}
+.ST-hover-event-info-timestamp {
+  font-size: 0.9em;
+  margin: 5px 0 3px 0;
+}
+.ST-hover-event-info-timestamp.ST-highlighted span {
+  padding: 2px 5px;
+  background-color: #ffe325;
 }

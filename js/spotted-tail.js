@@ -452,7 +452,7 @@ function spottedTail() {
 
 			var continuous_g = eventItems_continuous.append('g')
 				.classed('ST-event-rect-g', true)
-				.classed('ST-tooltipped', true)
+				// .classed('ST-tooltipped', true)
 				.attr('transform', function(d) { return 'translate('+(margin.left + xScale(d.timestamp[0]))+',0)' }) // Offset this one so the top border can show
 
 			continuous_g.append('rect')
@@ -462,16 +462,16 @@ function spottedTail() {
 				.attr('height', events_row_height - 1) // Make this minus one so it doesn't go below the bottom border
 				.style('fill', function(d) { return d.color; }); // Get the color of the first impact tag
 
-			continuous_g.append('text')
-				.text(function(d){
-					var pretty_date = d.timestamp.map(function(timestamp){ return new Date(timestamp).toLocaleTimeString().replace(/:[0-9][0-9] /, ' ').toLowerCase(); }).join(' to ');
-					return pretty_date + ', ' + d.level;
-				})
-				.attr('text-anchor', 'middle')
-				.attr('transform', function(d){
-					var width = xScale(d.timestamp[1]) - xScale(d.timestamp[0]) 
-					return 'translate('+width/2+','+(events_row_height*1.5)+')';
-				});
+			// continuous_g.append('text')
+			// 	.text(function(d){
+			// 		var pretty_date = d.timestamp.map(function(timestamp){ return new Date(timestamp).toLocaleTimeString().replace(/:[0-9][0-9] /, ' ').toLowerCase(); }).join(' to ');
+			// 		return pretty_date + ', ' + d.level;
+			// 	})
+			// 	.attr('text-anchor', 'middle')
+			// 	.attr('transform', function(d){
+			// 		var width = xScale(d.timestamp[1]) - xScale(d.timestamp[0]) 
+			// 		return 'translate('+width/2+','+(events_row_height*1.5)+')';
+			// 	});
 
 
 			// Add all the discrete items to this row
@@ -484,8 +484,10 @@ function spottedTail() {
 
 			var discrete_g = eventItems_discrete.append('g')
 				.classed('ST-event-circle-g', true)
-				.classed('ST-tooltipped', true)
-				.attr('transform', function(d,i) { return 'translate('+(margin.left + xScale(d.timestamp) )+',14)' });
+				// .classed('ST-tooltipped', true)
+				.attr('transform', function(d,i) { return 'translate('+(margin.left + xScale(d.timestamp) )+',14)' })
+				.on('mouseover', highlightEvent)
+				.on('mouseout', unhighlightEvent);
 
 			discrete_g.append('circle')
 				.classed('ST-event-circle', true)
@@ -496,17 +498,17 @@ function spottedTail() {
 					window.open(d.link);
 				})
 
-			discrete_g.append('text')
-				.text(function(d){
-					var pretty_date = new Date(d.timestamp).toLocaleTimeString().replace(/:[0-9][0-9] /, ' ').toLowerCase();
-					var level = d.level.replace(/-/g,' '),
-							pretty_level = toTitleCase(level);
-					return pretty_date + ' - ' + pretty_level;
-				})
-				.attr('text-anchor', 'middle')
-				.attr('transform', function(d,i){ 
-					return 'translate(0,'+(events_row_height + 1)+')'; // Plus one because YOLO
-				});
+			// discrete_g.append('text')
+			// 	.text(function(d){
+			// 		var pretty_date = new Date(d.timestamp).toLocaleTimeString().replace(/:[0-9][0-9] /, ' ').toLowerCase();
+			// 		var level = d.level.replace(/-/g,' '),
+			// 				pretty_level = toTitleCase(level);
+			// 		return pretty_date + ' - ' + pretty_level;
+			// 	})
+			// 	.attr('text-anchor', 'middle')
+			// 	.attr('transform', function(d,i){ 
+			// 		return 'translate(0,'+(events_row_height + 1)+')'; // Plus one because YOLO
+			// 	});
 
 
 			// Add a top rule
@@ -585,6 +587,25 @@ function spottedTail() {
 			// TODO, better updating
 			first_run = false;
 
+			function unhighlightEvent(){
+				d3.selectAll('.ST-hover-event-info-timestamp.ST-highlighted').classed('ST-highlighted', false);
+			}
+
+			function highlightEvent(d){
+				var uid = d.uid;
+				// console.log(uid,d3.select('.ST-hover-event-info-timestamp[data-which="'+uid+'"]').classed('ST-highlighted'))
+				d3.select('.ST-hover-event-info-timestamp[data-which="'+uid+'"]').classed('ST-highlighted', true);
+				// var x_offset = (margin.left + xScale(d.timestamp)),
+				// 		time = d.timestamp.format('ddd, MMM D \'YY, h:mm a'),
+				// 		pretty_level = toTitleCase(d.level);
+
+				// console.log(x_offset);
+
+				// d3.select('#ST-tooltip')
+				// 	.html(time + '—' + pretty_level)
+				// 	.style('display', null);
+			}
+
 			function brushed(d) {
 				xScale.domain(brush.empty() ? xScaleBrush.domain() : brush.extent());
 				// TODO, wrap this up into an update function
@@ -632,7 +653,7 @@ function spottedTail() {
 					hover_window_container.datum(hoverInfo);
 
 					hover_window_container.select('.ST-hover-timestamp').html(function(d){
-						return d.moment.format('dddd, MMM D \'YY, h:mm a');
+						return d.moment.format('ddd, MMM D \'YY, h:mma');
 					});
 
 					// Metrics
@@ -692,7 +713,7 @@ function spottedTail() {
 						.classed('ST-hover-event-info-category-container', true);
 
 					spot_container.append('div')
-						.classed('.ST-hover-event-info-category-label', true)
+						.classed('ST-hover-event-info-category-label', true)
 						.html(function(d){
 							return toTitleCase(d.key);
 						});
@@ -700,7 +721,7 @@ function spottedTail() {
 					// Update
 					spots_container.select('.ST-hover-event-info-category-label')
 						.html(function(d){
-							return d.key;
+							return toTitleCase(d.key);
 						});
 
 
@@ -708,9 +729,49 @@ function spottedTail() {
 							_event_item = event_item.enter(),
 							event_item_ = event_item.exit();
 
+					// Remove
+					event_item_.remove();
+
 					// Enter new
 					_event_item.append('div')
+						.classed('ST-hover-event-info-timestamp', true)
+						.attr('data-which', function(d){
+							return d.uid;
+						})
+						.html(function(d){
+							return '<span>' + d.timestamp.format('M/D, h:mma') + '</span>';
+						});
+
+					_event_item.append('div')
+						.classed('ST-hover-swatch', true)
+						.style('background-color', function(d){
+							return d.color;
+						});
+
+					_event_item.append('div')
 						.classed('ST-hover-event-info-item', true)
+						.html(function(d){
+							var text = toTitleCase(d.level);
+							// `event_name` doesn't exist on promotion elements because, simply, they aren't named events.
+							// We could possibly add more data to these promotion events at a later date
+							if (d.event_name){
+								text += ': ' + d.event_name;
+							}
+							return text;
+						});
+
+					// Update
+					event_item.select('.ST-hover-event-info-timestamp')
+						.html(function(d){
+							return '<span>' + d.timestamp.format('M/D, h:mma') + '</span>';
+						});
+
+					event_item.select('.ST-hover-swatch')
+						.style('background-color', function(d){
+							return d.color;
+						});
+
+					event_item.select('.ST-hover-event-info-item')
 						.html(function(d){
 							var text = toTitleCase(d.level);
 							// `event_name` doesn't exist on promotion elements because, simply, they aren't named events.
@@ -719,7 +780,7 @@ function spottedTail() {
 								text += ': ' + d.event_name
 							}
 							return text;
-						})
+						});
 
 					// Kill exiting
 					event_item_.remove();
@@ -749,6 +810,7 @@ function spottedTail() {
 				} else {
 					deactivateHover();
 				}
+
 
 			}
 
@@ -823,28 +885,6 @@ function spottedTail() {
 
 			}
 
-			// function mousemove(d) {
-			// 	var that = this;
-			// 	var point_radius = 3,
-			// 			mouse_x_buffer = -point_radius;
-			// 	var m = d3.mouse(that)[0],
-			// 			x0 = xScale.invert(m),
-			// 			i = bisectDate(data, x0, 1),
-			// 			d0 = data[i - 1],
-			// 			d1 = data[i];
-			// 	if (d0 && d1){
-			// 		var d = x0 - d0.timestamp > d1.timestamp - x0 ? d1 : d0;
-			// 		var point = d3.selectAll('.ST-point'),
-			// 				x_position = X(d);
-			// 		point.attr('transform', function(dd) { return 'translate(' + x_position + ',' + yScales[dd.group](d[dd.name]) + ')' });
-			// 		point.select('text')
-			// 			.text(function(dd) {return ppNumber(d[dd.name]) + ' ' + dd.display_name + ' ' + (legend[dd.name].metric || dd.name) })
-			// 			// .attr('x', function(dd){ return (-mouse_x_buffer - this.getBBox().width) })
-			// 			.attr('y', -point_radius*3.3)
-			// 			.attr('x', function(dd){ return (x_position < chart_width - this.getBBox().width - mouse_x_buffer*2) ? mouse_x_buffer : (-mouse_x_buffer - this.getBBox().width) });
-			// 	}
-			// }
-
 
 			function transformPromotionsIntoSpots(promos){
 				var promos_copy = JSON.parse(JSON.stringify(promos));
@@ -878,6 +918,7 @@ function spottedTail() {
 					}
 					promo.type = type;
 					promo.pretty_level = toTitleCase(promo.level);
+					promo.uid = _.uniqueId('ST_');
 					return promo;
 				});
 
@@ -942,7 +983,8 @@ function spottedTail() {
 							pretty_category: pretty_category,
 							level: impactTagFull.level,
 							color: impactTagFull.color,
-							tag_name: impactTagFull.name
+							tag_name: impactTagFull.name,
+							uid: _.uniqueId('ST_')
 						}
 						spots.push(spot);
 					});
