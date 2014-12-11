@@ -124,7 +124,7 @@
 #ST-hover-window-container {
   position: absolute;
   font-family: Helvetica, sans-serif;
-  width: 300px;
+  width: 250px;
   font-size: 13px;
   background-color: rgba(255,255,255,0.75);
   border: 1px solid #ccc;
@@ -149,7 +149,7 @@
   margin-right: 5px;
 }
 .ST-hover-section-label {
-  width: 75px;
+  width: 125px;
 }
 .ST-hover-event-info-category-label {
   text-transform: uppercase;

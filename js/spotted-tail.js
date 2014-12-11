@@ -69,7 +69,8 @@ function spottedTail() {
 			ppDate = function(dObj) { return dObj.toDateString() },
 			addCommas = d3.format(','),
 			toTitleCase = function(str){
-				return str.charAt(0).toUpperCase() + str.slice(1);
+				str = str.charAt(0).toUpperCase() + str.slice(1)
+				return str.replace(/_/g, ' ');
 			}
 
 			yScales['a'] = d3.scale.linear();
@@ -812,6 +813,7 @@ function spottedTail() {
 
 			function mousemove(d){
 				var that = this,
+						clientX = d3.event.clientX,
 						mouse_coords = d3.mouse(that);
 				mouse_coords[0] = mouse_coords[0] - margin.left;
 
@@ -836,7 +838,7 @@ function spottedTail() {
 						hover_padding = 30;
 
 				var hover_x;
-				if (mouse_x - hover_width + hover_padding > this.getBoundingClientRect().left){
+				if (clientX - hover_width > this.getBoundingClientRect().left){
 					hover_x = mouse_x - hover_width + hover_padding;
 				} else {
 					hover_x = mouse_x + hover_padding*4;
