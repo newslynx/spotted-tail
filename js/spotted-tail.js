@@ -839,7 +839,7 @@ function spottedTail() {
 						hover_padding = 30;
 
 				var hover_x;
-				if (clientX - hover_width > this.getBoundingClientRect().left){
+				if (clientX - hover_width*1.5 > this.getBoundingClientRect().left){
 					hover_x = mouse_x - hover_width + hover_padding;
 				} else {
 					hover_x = mouse_x + hover_padding*4;
