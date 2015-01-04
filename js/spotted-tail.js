@@ -708,9 +708,20 @@ function spottedTail() {
 
 					// Spots
 					// Do some data constancty stuff with the second arg to `.data()`
-					var spots_container = hover_window_container.selectAll('.ST-hover-event-info-category-container').data(function(d){ return d.spots; }, function(d) { return _.pluck(d.values, 'uid').join(); }),
-							_spots_container = spots_container.enter(),
-							spots_container_ = spots_container.exit();
+					var spot_display_limit = 5,
+							spots_not_included;
+
+					var spots_container = hover_window_container.selectAll('.ST-hover-event-info-category-container').data(function(d){ 
+							var data_to_bind = d.spots;
+							if (d.spots.length > spot_display_limit){
+								data_to_bind = d.spots.slice(0, spot_display_limit);
+							}
+							return data_to_bind; // Define data bind, only take 5 events
+						}, function(d) { 
+							return _.pluck(d.values, 'uid').join();  // Object constancy
+						}),
+						_spots_container = spots_container.enter(),
+						spots_container_ = spots_container.exit();
 
 					// Remove old
 					spots_container_.remove();
@@ -838,13 +849,14 @@ function spottedTail() {
 				var hover_width = hover_window_container.node().offsetWidth,
 						hover_padding = 30;
 
-				var hover_x;
-				if (clientX - hover_width*1.5 > this.getBoundingClientRect().left){
+				// Move the hover window to the right if close the left edge
+				var hover_x,
+						hover_side_multiplier = 1.5;
+				if (clientX - hover_width*hover_side_multiplier > this.getBoundingClientRect().left){
 					hover_x = mouse_x - hover_width + hover_padding;
 				} else {
 					hover_x = mouse_x + hover_padding*4;
 				}
-
 
 				hover_window_container
 					.style('top', mouse_y+'px')
@@ -890,9 +902,11 @@ function spottedTail() {
 							return legend[dd.name].color;
 						})
 
+					// Sort the metric dots by value
 					hover_data.metrics.sort(function(a,b){
 						return d3.descending(a.value, b.value);
-					})
+					});
+
 				}
 
 				// Get the date for our other buckets of data in `spot_values`
@@ -909,7 +923,7 @@ function spottedTail() {
 
 						d3_this.classed('ST-highlighted', false);
 						if (within_range){
-							// d.type = 'continuous';
+							d.begin_timestamp = d.timestamp[0];
 							spots_within_range.push(d);
 							d3_this.classed('ST-highlighted', true);
 						}
@@ -925,11 +939,15 @@ function spottedTail() {
 
 						d3_this.classed('ST-highlighted', false);
 						if (within_range){
-							// d.type = 'discrete';
+							d.begin_timestamp = d.timestamp;
 							spots_within_range.push(d);
 							d3_this.classed('ST-highlighted', true);
 						}
 					});
+
+				spots_within_range.sort(function(a,b){
+					return d3.ascending(a.begin_timestamp, b.begin_timestamp);
+				})
 
 
 				// nest this object under categories
