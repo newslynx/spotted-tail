@@ -708,20 +708,9 @@ function spottedTail() {
 
 					// Spots
 					// Do some data constancty stuff with the second arg to `.data()`
-					var spot_display_limit = 5,
-							spots_not_included;
-
-					var spots_container = hover_window_container.selectAll('.ST-hover-event-info-category-container').data(function(d){ 
-							var data_to_bind = d.spots;
-							if (d.spots.length > spot_display_limit){
-								data_to_bind = d.spots.slice(0, spot_display_limit);
-							}
-							return data_to_bind; // Define data bind, only take 5 events
-						}, function(d) { 
-							return _.pluck(d.values, 'uid').join();  // Object constancy
-						}),
-						_spots_container = spots_container.enter(),
-						spots_container_ = spots_container.exit();
+					var spots_container = hover_window_container.selectAll('.ST-hover-event-info-category-container').data(function(d){ return d.spots; }, function(d) { return _.pluck(d.values, 'uid').join(); }),
+							_spots_container = spots_container.enter(),
+							spots_container_ = spots_container.exit();
 
 					// Remove old
 					spots_container_.remove();
