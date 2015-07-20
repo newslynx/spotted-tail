@@ -197,6 +197,8 @@ function spottedTail() {
 			// Do the same for minimums in case events or promos happen before
 			x_domain[0] = d3.min([x_domain[0], promosMinDate, eventsMinDate]);
 
+			console.log(x_domain)
+
 			var y_max = {};
 			y_max['a'] = d3.max(metrics['a'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
 			y_max['b'] = d3.max(metrics['b'], function(c) { return d3.max(c.values, function(v) { return v.count; }); })
@@ -1014,7 +1016,7 @@ function spottedTail() {
 
 				eventsMaxDate = d3.max(events_copy, function(d) { return d.created; }) || new Date(0);
 				eventsMinDate = d3.min(events_copy, function(d) { return d.created; }) || new Date();
-
+				console.log(eventsMinDate)
 				var abbreved_names = {
 							achievement: 'achievem.'
 						};

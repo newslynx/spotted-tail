@@ -9,7 +9,7 @@
 
 	var promotions = [
 		{
-			created: ['2015-07-09T12:36:52.392158+00:00','2015-07-09T04:36:52.356128+00:00'],
+			created: ['2015-07-11T04:36:52.356128+00:00','2015-07-12T12:36:52.392158+00:00'],
 			category: 'promotion',
 			level: 'homepage',
 			link: 'http://mhkeller.com',
@@ -17,7 +17,7 @@
 			color: '#fc0'
 		},
 		{
-			created: '2015-07-18T20:36:58.058445+00:00',
+			created: '2015-07-10T20:36:58.058445+00:00',
 			category: 'promotion',
 			level: 'tweet',
 			link: 'http://twitter.com/mhkeller',
@@ -28,7 +28,7 @@
 
 	var events = [
 		{
-			created: '2015-07-09T12:36:52.392158+00:00',
+			created: '2015-07-11T12:36:52.392158+00:00',
 			name: 'Jon Stewart talked about us',
 			impact_tag_categories: ['citation'],
 			impact_tag_levels: ['media'],
@@ -42,7 +42,7 @@
 			],
 			related_links: []
 		},{
-			created: '2015-07-09T04:36:52.356128+00:00',
+			created: '2015-07-12T04:36:52.356128+00:00',
 			name: 'Ralph Lauren talked about us',
 			impact_tag_categories: ['change'],
 			impact_tag_levels: ['media'],
@@ -56,7 +56,7 @@
 			],
 			related_links: []
 		},{
-			created: '2015-07-18T20:36:58.058445+00:00',
+			created: '2015-07-11T20:36:58.058445+00:00',
 			name: 'A dog talked about us',
 			impact_tag_categories: ['citation'],
 			impact_tag_levels: ['media'],
