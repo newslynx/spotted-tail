@@ -9,7 +9,7 @@
 
 	var promotions = [
 		{
-			timestamp: [962409600,976739900],
+			created: ['2015-07-09T12:36:52.392158+00:00','2015-07-09T04:36:52.356128+00:00'],
 			category: 'promotion',
 			level: 'homepage',
 			link: 'http://mhkeller.com',
@@ -17,7 +17,7 @@
 			color: '#fc0'
 		},
 		{
-			timestamp: 976739900,
+			created: '2015-07-18T20:36:58.058445+00:00',
 			category: 'promotion',
 			level: 'tweet',
 			link: 'http://twitter.com/mhkeller',
@@ -28,7 +28,7 @@
 
 	var events = [
 		{
-			timestamp: 962409600,
+			created: '2015-07-09T12:36:52.392158+00:00',
 			name: 'Jon Stewart talked about us',
 			impact_tag_categories: ['citation'],
 			impact_tag_levels: ['media'],
@@ -42,7 +42,7 @@
 			],
 			related_links: []
 		},{
-			timestamp: 976739900,
+			created: '2015-07-09T04:36:52.356128+00:00',
 			name: 'Ralph Lauren talked about us',
 			impact_tag_categories: ['change'],
 			impact_tag_levels: ['media'],
@@ -56,7 +56,7 @@
 			],
 			related_links: []
 		},{
-			timestamp: 971628700,
+			created: '2015-07-18T20:36:58.058445+00:00',
 			name: 'A dog talked about us',
 			impact_tag_categories: ['citation'],
 			impact_tag_levels: ['media'],
@@ -87,9 +87,6 @@
 
 	function drawChart(data_){
 		// Convert our timestamps to numbers
-		data_.forEach(function(row){
-			row.timestamp = +row.timestamp
-		})
 		d3.select('#ST-chart')
 			.datum(data_)
 		.call(stChart)
