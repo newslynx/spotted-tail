@@ -34,15 +34,15 @@ function spottedTail() {
 			yValue,
 			legend,
 			spots,
-			promotions,
+			// promotions,
 			interpolate,
 			timezone,
 			events,
 			onBrush,
 			eventsMinDate,
-			promosMinDate,
+			// promosMinDate,
 			eventsMaxDate,
-			promosMaxDate,
+			// promosMaxDate,
 			hover_window_container,
 			but_seriously_hide,
 			follow_line_g,
@@ -102,9 +102,9 @@ function spottedTail() {
 			if (first_run){
 				data = parseDates(data);
 
-				events = transformEventsIntoSpots(events);
-				promotions = transformPromotionsIntoSpots(promotions);
-				spots = promotions.concat(events);
+				spots = transformEventsIntoSpots(events);
+				// promotions = transformPromotionsIntoSpots(promotions);
+				// spots = promotions.concat(events);
 				// spot_values = spots.map(function(sp){
 				// 	return sp.values.discrete;
 				// });
@@ -193,9 +193,9 @@ function spottedTail() {
 			// Get the initial mins and maxes based on the timestamp
 			var x_domain = d3.extent(data, function(d) { return d.datetime; });
 			// And then throw some more candidates into the mix with promos and eventsMaxDates
-			x_domain[1] = d3.max([x_domain[1], promosMaxDate, eventsMaxDate]);
+			x_domain[1] = d3.max([x_domain[1], eventsMaxDate]);
 			// Do the same for minimums in case events or promos happen before
-			x_domain[0] = d3.min([x_domain[0], promosMinDate, eventsMinDate]);
+			x_domain[0] = d3.min([x_domain[0], eventsMinDate]);
 
 			console.log(x_domain)
 
@@ -953,61 +953,61 @@ function spottedTail() {
 			}
 
 
-			function transformPromotionsIntoSpots(promos){
-				var promos_copy = JSON.parse(JSON.stringify(promos));
+			// function transformPromotionsIntoSpots(promos){
+			// 	var promos_copy = JSON.parse(JSON.stringify(promos));
 
-				promos_copy = parseDates(promos_copy);
+			// 	promos_copy = parseDates(promos_copy);
 
-				promosMaxDate = d3.max(promos_copy, function(d) { 
-					if (Array.isArray(d.created)){
-						return d3.max(d.created) || new Date(0);
-					} else {
-						return d.created; 
-					}
-				});
+			// 	promosMaxDate = d3.max(promos_copy, function(d) { 
+			// 		if (Array.isArray(d.created)){
+			// 			return d3.max(d.created) || new Date(0);
+			// 		} else {
+			// 			return d.created; 
+			// 		}
+			// 	});
 
-				if (!promosMaxDate) { promosMaxDate = new Date(0); }
+			// 	if (!promosMaxDate) { promosMaxDate = new Date(0); }
 
-				// Calc min of promos
-				promosMinDate = d3.min(promos_copy, function(d) { 
-					if (Array.isArray(d.created)){
-						return d3.min(d.created) || new Date();
-					} else {
-						return d.created; 
-					}
-				});
+			// 	// Calc min of promos
+			// 	promosMinDate = d3.min(promos_copy, function(d) { 
+			// 		if (Array.isArray(d.created)){
+			// 			return d3.min(d.created) || new Date();
+			// 		} else {
+			// 			return d.created; 
+			// 		}
+			// 	});
 
 
-				promos_copy = promos_copy.map(function(promo){
-					var type = 'discrete';
-					if (Array.isArray(promo.created)) {
-						type = 'continuous';
-					}
-					promo.type = type;
-					promo.pretty_level = toTitleCase(promo.level);
-					promo.uid = _.uniqueId('ST_');
-					return promo;
-				});
+			// 	promos_copy = promos_copy.map(function(promo){
+			// 		var type = 'discrete';
+			// 		if (Array.isArray(promo.created)) {
+			// 			type = 'continuous';
+			// 		}
+			// 		promo.type = type;
+			// 		promo.pretty_level = toTitleCase(promo.level);
+			// 		promo.uid = _.uniqueId('ST_');
+			// 		return promo;
+			// 	});
 
-				var spots = {};
+			// 	var spots = {};
 
-				if (promos_copy.length){
-					spots = d3.nest()
-											.key(function(d){ return d.type })
-											.map(promos_copy);
-				}
+			// 	if (promos_copy.length){
+			// 		spots = d3.nest()
+			// 								.key(function(d){ return d.type })
+			// 								.map(promos_copy);
+			// 	}
 
-				// Return this in the same nested format as the others
-				return [
-					{
-						key: 'Promot.',
-						values: {
-							discrete: spots.discrete || [],
-							continuous: spots.continuous || []
-						}
-					}
-				]
-			}
+			// 	// Return this in the same nested format as the others
+			// 	return [
+			// 		{
+			// 			key: 'Promot.',
+			// 			values: {
+			// 				discrete: spots.discrete || [],
+			// 				continuous: spots.continuous || []
+			// 			}
+			// 		}
+			// 	]
+			// }
 
 			function transformEventsIntoSpots(evts){
 				// If we had any not serializable elements in our data, laterz
@@ -1016,7 +1016,7 @@ function spottedTail() {
 
 				eventsMaxDate = d3.max(events_copy, function(d) { return d.created; }) || new Date(0);
 				eventsMinDate = d3.min(events_copy, function(d) { return d.created; }) || new Date();
-				console.log(eventsMinDate)
+
 				var abbreved_names = {
 							achievement: 'achievem.'
 						};
@@ -1193,11 +1193,11 @@ function spottedTail() {
 		return chart;
 	}
 
-	chart.promotions = function(__){
-		if (!arguments.length) return promotions;
-		promotions = __;
-		return chart;
-	}
+	// chart.promotions = function(__){
+	// 	if (!arguments.length) return promotions;
+	// 	promotions = __;
+	// 	return chart;
+	// }
 	chart.interpolate = function(__){
 		if (!arguments.length) return interpolate;
 		interpolate = __;

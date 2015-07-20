@@ -8,26 +8,32 @@
 	}
 
 	var promotions = [
-		{
-			created: ['2015-07-11T04:36:52.356128+00:00','2015-07-12T12:36:52.392158+00:00'],
-			category: 'promotion',
-			level: 'homepage',
-			link: 'http://mhkeller.com',
-			text: 'mhk',
-			color: '#fc0'
-		},
-		{
-			created: '2015-07-10T20:36:58.058445+00:00',
-			category: 'promotion',
-			level: 'tweet',
-			link: 'http://twitter.com/mhkeller',
-			text: 'mhk',
-			color: '#0cf'
-		}
+		// {
+		// 	created: ['2015-07-11T04:36:52.356128+00:00','2015-07-12T12:36:52.392158+00:00'],
+		// 	category: 'promotion',
+		// 	level: 'homepage',
+		// 	link: 'http://mhkeller.com',
+		// 	text: 'mhk',
+		// 	color: '#fc0'
+		// },
 	]
 
 	var events = [
 		{
+			created: '2015-07-11T14:36:52.392158+00:00',
+			name: 'FB post',
+			impact_tag_categories: ['promotion'],
+			impact_tag_levels: ['internal'],
+			impact_tags_full: [
+				{
+					category: 'promotion',
+					level: 'media',
+					name: 'internal promotion',
+					color: '#fc0'
+				}
+			],
+			related_links: []
+		},{
 			created: '2015-07-11T12:36:52.392158+00:00',
 			name: 'Jon Stewart talked about us',
 			impact_tag_categories: ['citation'],
@@ -76,7 +82,7 @@
 			.y(function(d) { return +d.count; })
 			.legend(legend)
 			.events(events)
-			.promotions(promotions)
+			// .promotions(promotions)
 			.timezone(timezone)
 			.interpolate('step-after')
 			.onBrush(function(dateRange, empty){
